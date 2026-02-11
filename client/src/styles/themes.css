@@ -1,0 +1,62 @@
+/* Minimal Theme Styles */
+body.theme-minimal {
+  /* Default styles remain as they are */
+}
+
+/* Premium Boutique Theme Styles */
+body.theme-premium {
+  /* Enhanced premium styling */
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 222.2 47.4% 11.2%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+}
+
+body.theme-premium .font-display {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.05em;
+}
+
+body.theme-premium .luxury-label {
+  letter-spacing: 0.5em;
+  font-size: 9px;
+}
+
+/* Banner-Heavy Modern Theme Styles */
+body.theme-modern {
+  /* Bold modern styling */
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 0 0% 8%;
+  --accent-foreground: 0 0% 98%;
+}
+
+body.theme-modern .font-display {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+body.theme-modern .luxury-label {
+  letter-spacing: 0.3em;
+  font-size: 10px;
+}
+
+body.theme-modern .container {
+  max-width: 100%;
+  padding: 0 2rem;
+}
+
+/* Responsive adjustments for themes */
+@media (max-width: 768px) {
+  body.theme-premium .luxury-label {
+    letter-spacing: 0.3em;
+  }
+  
+  body.theme-modern .luxury-label {
+    letter-spacing: 0.2em;
+  }
+}

@@ -56,7 +56,7 @@ const Blogs = () => {
     setOpen(true);
   };
 
-  const goo = "gooo"
+  // const goo = "gooo"
 
   const updateSeo = (field: string, value: any) => {
     setForm({ ...form, seo: { ...form.seo!, [field]: value } });

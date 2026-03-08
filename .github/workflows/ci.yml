@@ -27,16 +27,16 @@ jobs:
         working-directory: server
         run: npm run lint -- --max-warnings=0
 
-      - name: Install frontend deps
-        working-directory: client
+      - name: Install admin deps
+        working-directory: admin
         run: npm ci
 
-      - name: Lint frontend
-        working-directory: client
+      - name: Lint admin
+        working-directory: admin
         run: npm run lint -- --max-warnings=0
 
       - name: Build backend Docker image
         run: docker build -t backend ./server
 
-      - name: Build frontend Docker image
-        run: docker build -t frontend ./client
+      - name: Build admin Docker image
+        run: docker build -t admin ./admin

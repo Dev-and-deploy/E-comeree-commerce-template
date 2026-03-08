@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { 
-  getAllProducts, 
-  getProductBySlug, 
-  getAllProductsAdmin, 
-  createProduct, 
-  updateProduct, 
+import {
+  getAllProducts,
+  getProductBySlug,
+  getAllProductsAdmin,
+  createProduct,
+  updateProduct,
   deleteProduct,
-  getFeaturedProducts
+  getFeaturedProducts,
 } from '../controllers/productController.js';
 import { authMiddleware, adminMiddleware } from '../utils/jwt.js';
 

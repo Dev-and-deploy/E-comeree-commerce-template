@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store/store";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { logout } from "@/store/slices/authSlice";
@@ -21,8 +21,6 @@ const AdminSidebar = () => {
   const { mode } = useAppSelector((s) => s.theme);
   const { user } = useAppSelector((s) => s.auth);
   const [collapsed, setCollapsed] = useState(false);
-  const location = useLocation();
-
   const isSuperAdmin = user?.role === "super_admin";
 
   return (

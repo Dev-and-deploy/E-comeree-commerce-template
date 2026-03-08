@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { 
-  createOrder, 
-  getUserOrders, 
-  getAllOrders, 
-  getOrderById, 
-  updateOrderStatus, 
-  deleteOrder 
+import {
+  createOrder,
+  getUserOrders,
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  deleteOrder,
 } from '../controllers/orderController.js';
 import { authMiddleware, adminMiddleware } from '../utils/jwt.js';
 

@@ -24,7 +24,7 @@ const createSuperAdmin = async () => {
       password: 'SuperAdminPassword123!',
       full_name: 'Super Admin',
       role: 'super_admin',
-      is_active: true
+      is_active: true,
     };
 
     const superAdmin = new User(superAdminData);
@@ -34,7 +34,7 @@ const createSuperAdmin = async () => {
     // Create profile for super admin
     const profile = new Profile({
       user_id: superAdmin._id,
-      full_name: superAdmin.full_name
+      full_name: superAdmin.full_name,
     });
     await profile.save();
     console.log('Profile created for super admin');

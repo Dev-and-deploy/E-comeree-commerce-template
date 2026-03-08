@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { 
-  getAllCategories, 
-  getAllCategoriesAdmin, 
-  getCategoryBySlug, 
-  createCategory, 
-  updateCategory, 
-  deleteCategory 
+import {
+  getAllCategories,
+  getAllCategoriesAdmin,
+  getCategoryBySlug,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 } from '../controllers/categoryController.js';
 import { authMiddleware, adminMiddleware } from '../utils/jwt.js';
 

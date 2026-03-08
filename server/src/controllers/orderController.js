@@ -3,16 +3,8 @@ import { Order, OrderItem } from '../models/index.js';
 // Create order
 export const createOrder = async (req, res) => {
   try {
-    const {
-      subtotal,
-      tax,
-      shipping_cost,
-      total,
-      shipping_address,
-      billing_address,
-      notes,
-      items
-    } = req.body;
+    const { subtotal, tax, shipping_cost, total, shipping_address, billing_address, notes, items } =
+      req.body;
 
     // Create order
     const order = new Order({
@@ -26,13 +18,13 @@ export const createOrder = async (req, res) => {
       notes: notes || '',
       status: 'confirmed',
       payment_status: 'paid',
-      payment_method: 'mock'
+      payment_method: 'mock',
     });
 
     await order.save();
 
     // Create order items
-    const orderItems = items.map(item => ({
+    const orderItems = items.map((item) => ({
       order_id: order._id,
       product_id: item.product_id,
       product_name: item.product_name,
@@ -41,28 +33,27 @@ export const createOrder = async (req, res) => {
       size: item.size || null,
       color: item.color || null,
       unit_price: item.unit_price,
-      total_price: item.total_price
+      total_price: item.total_price,
     }));
 
     await OrderItem.insertMany(orderItems);
 
     // Populate order with items for response
-    const populatedOrder = await Order.findById(order._id)
-      .populate({
-        path: 'user_id',
-        select: 'email full_name'
-      });
+    const populatedOrder = await Order.findById(order._id).populate({
+      path: 'user_id',
+      select: 'email full_name',
+    });
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      data: populatedOrder
+      data: populatedOrder,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error creating order',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -70,8 +61,7 @@ export const createOrder = async (req, res) => {
 // Get user orders
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user_id: req.user._id })
-      .sort({ created_at: -1 });
+    const orders = await Order.find({ user_id: req.user._id }).sort({ created_at: -1 });
 
     // Get order items for each order
     const ordersWithItems = await Promise.all(
@@ -79,20 +69,20 @@ export const getUserOrders = async (req, res) => {
         const items = await OrderItem.find({ order_id: order._id });
         return {
           ...order.toObject(),
-          items
+          items,
         };
       })
     );
 
     res.status(200).json({
       success: true,
-      data: ordersWithItems
+      data: ordersWithItems,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching orders',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -110,20 +100,20 @@ export const getAllOrders = async (req, res) => {
         const items = await OrderItem.find({ order_id: order._id });
         return {
           ...order.toObject(),
-          items
+          items,
         };
       })
     );
 
     res.status(200).json({
       success: true,
-      data: ordersWithItems
+      data: ordersWithItems,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching orders',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -132,14 +122,13 @@ export const getAllOrders = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const order = await Order.findById(id)
-      .populate('user_id', 'email full_name');
+
+    const order = await Order.findById(id).populate('user_id', 'email full_name');
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found'
+        message: 'Order not found',
       });
     }
 
@@ -148,7 +137,7 @@ export const getOrderById = async (req, res) => {
       if (order.user_id.toString() !== req.user._id.toString()) {
         return res.status(403).json({
           success: false,
-          message: 'Access denied'
+          message: 'Access denied',
         });
       }
     }
@@ -160,14 +149,14 @@ export const getOrderById = async (req, res) => {
       success: true,
       data: {
         ...order.toObject(),
-        items
-      }
+        items,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching order',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -182,29 +171,28 @@ export const updateOrderStatus = async (req, res) => {
     if (status) updateData.status = status;
     if (payment_status) updateData.payment_status = payment_status;
 
-    const order = await Order.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('user_id', 'email full_name');
+    const order = await Order.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate('user_id', 'email full_name');
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found'
+        message: 'Order not found',
       });
     }
 
     res.status(200).json({
       success: true,
       message: 'Order updated successfully',
-      data: order
+      data: order,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating order',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -223,19 +211,19 @@ export const deleteOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found'
+        message: 'Order not found',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Order deleted successfully'
+      message: 'Order deleted successfully',
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error deleting order',
-      error: error.message
+      error: error.message,
     });
   }
 };

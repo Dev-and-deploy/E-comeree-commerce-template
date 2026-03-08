@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Megaphone } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Campaign } from "@/store/api/mockData";
 
 const statusColors: Record<string, string> = {

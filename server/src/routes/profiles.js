@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { 
-  getProfile, 
-  updateProfile, 
-  getAllProfiles, 
-  getProfileById, 
-  updateProfileById, 
-  deleteProfile 
+import {
+  getProfile,
+  updateProfile,
+  getAllProfiles,
+  getProfileById,
+  updateProfileById,
+  deleteProfile,
 } from '../controllers/profileController.js';
 import { authMiddleware, adminMiddleware } from '../utils/jwt.js';
 

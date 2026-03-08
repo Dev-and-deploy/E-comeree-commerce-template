@@ -5,11 +5,4 @@ import Order from './Order.js';
 import OrderItem from './OrderItem.js';
 import Profile from './Profile.js';
 
-export {
-  User,
-  Category,
-  Product,
-  Order,
-  OrderItem,
-  Profile
-};
+export { User, Category, Product, Order, OrderItem, Profile };

@@ -11,7 +11,7 @@ export const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: 'User with this email already exists',
       });
     }
 
@@ -20,7 +20,7 @@ export const register = async (req, res) => {
       email: email.toLowerCase(),
       password,
       full_name: full_name || '',
-      role: 'customer'
+      role: 'customer',
     });
 
     await user.save();
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
     // Create profile
     const profile = new Profile({
       user_id: user._id,
-      full_name: full_name || ''
+      full_name: full_name || '',
     });
     await profile.save();
 
@@ -40,14 +40,14 @@ export const register = async (req, res) => {
       message: 'User registered successfully',
       data: {
         user: user.toJSON(),
-        token
-      }
+        token,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error registering user',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -62,7 +62,7 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
       });
     }
 
@@ -70,7 +70,7 @@ export const login = async (req, res) => {
     if (!user.is_active) {
       return res.status(401).json({
         success: false,
-        message: 'Account is deactivated'
+        message: 'Account is deactivated',
       });
     }
 
@@ -79,7 +79,7 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
       });
     }
 
@@ -91,14 +91,14 @@ export const login = async (req, res) => {
       message: 'Login successful',
       data: {
         user: user.toJSON(),
-        token
-      }
+        token,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error logging in',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -113,14 +113,14 @@ export const getCurrentUser = async (req, res) => {
       success: true,
       data: {
         user: user.toJSON(),
-        profile
-      }
+        profile,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching user data',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -146,7 +146,7 @@ export const updateProfile = async (req, res) => {
         address: address || '',
         city: city || '',
         country: country || '',
-        avatar_url: avatar_url || ''
+        avatar_url: avatar_url || '',
       },
       { new: true, upsert: true, runValidators: true }
     );
@@ -156,14 +156,14 @@ export const updateProfile = async (req, res) => {
       message: 'Profile updated successfully',
       data: {
         user: user.toJSON(),
-        profile
-      }
+        profile,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating profile',
-      error: error.message
+      error: error.message,
     });
   }
 };

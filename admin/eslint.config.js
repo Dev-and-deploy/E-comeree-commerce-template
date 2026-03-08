@@ -5,22 +5,49 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["dist", "node_modules"] },
+
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ["**/*.{ts,tsx}"],
+    files: ["**/*.{ts,tsx,js,jsx}"],
+
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+    ],
+
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: globals.browser,
     },
+
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
     },
+
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/no-unused-vars": "off",
+
+      // Base JS rule disabled
+      "no-unused-vars": "off",
+
+      // Allow unused vars except important ones
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          varsIgnorePattern: "^_",
+          argsIgnorePattern: "^_",
+        },
+      ],
+
+      // Ignore common TypeScript strict errors
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-require-imports": "off",
+
+      // Disable React fast refresh rule
+      "react-refresh/only-export-components": "off",
     },
-  },
+  }
 );

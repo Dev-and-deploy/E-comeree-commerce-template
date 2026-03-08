@@ -3,17 +3,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, User, Menu, X, Search } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+// import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header: React.FC = () => {
   const { totalItems } = useCart();
   const { user, userRole } = useAuth();
-  const { settings } = useSiteSettings();
+  // const { settings } = useSiteSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
-  const siteName = settings?.site_name || 'MAISON';
+  const siteName = 'MAISON';
 
   const navLinks = [
     { to: '/shop', label: 'Shop' },

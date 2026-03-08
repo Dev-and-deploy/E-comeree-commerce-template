@@ -6,7 +6,7 @@ import StoreLayout from '@/components/layout/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/services/api';
-import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+// import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import heroImage1 from '@/assets/hero-1.jpg';
 import heroImage2 from '@/assets/hero-2.jpg';
 import categoryDresses from '@/assets/category-dresses.jpg';
@@ -22,7 +22,9 @@ const Index = () => {
     },
   });
 
-  const { settings, isLoading: settingsLoading } = useSiteSettings();
+  // const { settings, isLoading: settingsLoading } = useSiteSettings();
+
+  
 
   // Use default values if settings are not loaded yet or not available
   const heroTitle = settings?.hero_title || 'Curated Luxury';

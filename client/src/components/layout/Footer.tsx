@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+// import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 
 const Footer: React.FC = () => {
-  const { settings } = useSiteSettings();
-  const siteName = settings?.site_name || 'MAISON';
+  // const { settings } = useSiteSettings();
+  const siteName = 'MAISON';
 
   return (
     <footer className="bg-primary text-primary-foreground">

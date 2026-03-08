@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client';
 import StoreLayout from '@/components/layout/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import { Search as SearchIcon } from 'lucide-react';
@@ -15,12 +15,12 @@ const SearchPage = () => {
     queryFn: async () => {
       const q = searchParams.get('q');
       if (!q) return [];
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .or(`name.ilike.%${q}%,description.ilike.%${q}%,brand.ilike.%${q}%`);
-      return data || [];
+      // const { data } = await supabase
+      //   .from('products')
+      //   .select('*')
+      //   .eq('is_active', true)
+      //   .or(`name.ilike.%${q}%,description.ilike.%${q}%,brand.ilike.%${q}%`);
+      // return data || [];
     },
     enabled: !!searchParams.get('q'),
   });

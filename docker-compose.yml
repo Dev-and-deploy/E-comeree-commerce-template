@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./server
+    image: server:latest
+    ports:
+      - "6000:6000"
+    env_file:
+      - ./server/.env
+    container_name: server
+    restart: always
+
+
+  admin:
+    build: ./admin
+    image: admin:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./admin/.env
+    container_name: admin
+    restart: always
+    depends_on:
+      - backend

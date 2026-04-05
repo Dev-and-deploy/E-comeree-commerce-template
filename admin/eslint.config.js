@@ -10,10 +10,7 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx,js,jsx}"],
 
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
 
     languageOptions: {
       ecmaVersion: "latest",
@@ -49,5 +46,5 @@ export default tseslint.config(
       // Disable React fast refresh rule
       "react-refresh/only-export-components": "off",
     },
-  }
+  },
 );

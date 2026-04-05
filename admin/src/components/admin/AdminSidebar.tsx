@@ -3,7 +3,18 @@ import { useAppSelector, useAppDispatch } from "@/store/store";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { logout } from "@/store/slices/authSlice";
 import {
-  LayoutDashboard, Megaphone, Tags, FileText, Settings, LogOut, Moon, Sun, Menu, ChevronLeft, Package, ShoppingCart,
+  LayoutDashboard,
+  Megaphone,
+  Tags,
+  FileText,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  Menu,
+  ChevronLeft,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,14 +40,25 @@ const AdminSidebar = () => {
     <aside
       className={cn(
         "flex flex-col border-r border-border bg-sidebar-background text-sidebar-foreground transition-all duration-300 h-screen sticky top-0",
-        collapsed ? "w-16" : "w-64"
+        collapsed ? "w-16" : "w-64",
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && <h1 className="text-lg font-bold tracking-tight">Admin Panel</h1>}
-        <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)} className="shrink-0">
-          {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {!collapsed && (
+          <h1 className="text-lg font-bold tracking-tight">Admin Panel</h1>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCollapsed(!collapsed)}
+          className="shrink-0"
+        >
+          {collapsed ? (
+            <Menu className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -52,7 +74,7 @@ const AdminSidebar = () => {
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )
             }
           >
@@ -69,7 +91,7 @@ const AdminSidebar = () => {
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )
             }
           >
@@ -84,14 +106,32 @@ const AdminSidebar = () => {
         {!collapsed && (
           <div className="px-2 py-1">
             <p className="text-xs font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.role?.replace("_", " ")}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.role?.replace("_", " ")}
+            </p>
           </div>
         )}
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={() => dispatch(toggleTheme())} className="shrink-0" title="Toggle theme">
-            {mode === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => dispatch(toggleTheme())}
+            className="shrink-0"
+            title="Toggle theme"
+          >
+            {mode === "light" ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => dispatch(logout())} className="shrink-0 text-destructive" title="Logout">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => dispatch(logout())}
+            className="shrink-0 text-destructive"
+            title="Logout"
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

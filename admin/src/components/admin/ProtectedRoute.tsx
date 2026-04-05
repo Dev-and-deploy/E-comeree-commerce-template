@@ -11,7 +11,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
 
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
-  if (requiredRole && user?.role !== requiredRole) return <Navigate to="/admin" replace />;
+  if (requiredRole && user?.role !== requiredRole)
+    return <Navigate to="/admin" replace />;
 
   return <>{children}</>;
 };

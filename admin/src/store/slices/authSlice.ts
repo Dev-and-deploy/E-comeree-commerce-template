@@ -35,8 +35,17 @@ const authSlice = createSlice({
     login(state, action: PayloadAction<{ email: string; password: string }>) {
       // Mock login
       const { email } = action.payload;
-      const role: UserRole = email.includes("super") ? "super_admin" : email.includes("editor") ? "editor" : "admin";
-      state.user = { id: "1", name: role === "super_admin" ? "Super Admin" : "Admin User", email, role };
+      const role: UserRole = email.includes("super")
+        ? "super_admin"
+        : email.includes("editor")
+          ? "editor"
+          : "admin";
+      state.user = {
+        id: "1",
+        name: role === "super_admin" ? "Super Admin" : "Admin User",
+        email,
+        role,
+      };
       state.isAuthenticated = true;
       state.token = "mock-jwt-token";
     },

@@ -1,7 +1,13 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import {
-  mockCampaigns, mockDiscounts, mockBlogs, mockDashboard,
-  Campaign, Discount, BlogPost, DashboardStats,
+  mockCampaigns,
+  mockDiscounts,
+  mockBlogs,
+  mockDashboard,
+  Campaign,
+  Discount,
+  BlogPost,
+  DashboardStats,
 } from "./mockData";
 
 // Simulate network delay
@@ -42,10 +48,15 @@ export const mockApi = createApi({
       },
       invalidatesTags: ["Campaigns"],
     }),
-    updateCampaign: builder.mutation<Campaign, Partial<Campaign> & { id: string }>({
+    updateCampaign: builder.mutation<
+      Campaign,
+      Partial<Campaign> & { id: string }
+    >({
       queryFn: async (body) => {
         await delay();
-        campaigns = campaigns.map((c) => (c.id === body.id ? { ...c, ...body } : c));
+        campaigns = campaigns.map((c) =>
+          c.id === body.id ? { ...c, ...body } : c,
+        );
         return { data: campaigns.find((c) => c.id === body.id)! };
       },
       invalidatesTags: ["Campaigns"],
@@ -70,16 +81,25 @@ export const mockApi = createApi({
     createDiscount: builder.mutation<Discount, Partial<Discount>>({
       queryFn: async (body) => {
         await delay();
-        const d: Discount = { id: Date.now().toString(), usedCount: 0, ...body } as Discount;
+        const d: Discount = {
+          id: Date.now().toString(),
+          usedCount: 0,
+          ...body,
+        } as Discount;
         discounts.push(d);
         return { data: d };
       },
       invalidatesTags: ["Discounts"],
     }),
-    updateDiscount: builder.mutation<Discount, Partial<Discount> & { id: string }>({
+    updateDiscount: builder.mutation<
+      Discount,
+      Partial<Discount> & { id: string }
+    >({
       queryFn: async (body) => {
         await delay();
-        discounts = discounts.map((d) => (d.id === body.id ? { ...d, ...body } : d));
+        discounts = discounts.map((d) =>
+          d.id === body.id ? { ...d, ...body } : d,
+        );
         return { data: discounts.find((d) => d.id === body.id)! };
       },
       invalidatesTags: ["Discounts"],
@@ -105,7 +125,9 @@ export const mockApi = createApi({
       queryFn: async (id) => {
         await delay();
         const blog = blogs.find((b) => b.id === id);
-        return blog ? { data: blog } : { error: { status: 404, data: "Not found" } };
+        return blog
+          ? { data: blog }
+          : { error: { status: 404, data: "Not found" } };
       },
       providesTags: ["Blogs"],
     }),
@@ -116,7 +138,18 @@ export const mockApi = createApi({
           id: Date.now().toString(),
           createdAt: new Date().toISOString().split("T")[0],
           publishedAt: "",
-          seo: { metaTitle: "", metaDescription: "", canonicalUrl: "", ogTitle: "", ogDescription: "", ogImage: "", focusKeyword: "", noIndex: false, noFollow: false, structuredData: "" },
+          seo: {
+            metaTitle: "",
+            metaDescription: "",
+            canonicalUrl: "",
+            ogTitle: "",
+            ogDescription: "",
+            ogImage: "",
+            focusKeyword: "",
+            noIndex: false,
+            noFollow: false,
+            structuredData: "",
+          },
           tags: [],
           ...body,
         } as BlogPost;
@@ -146,7 +179,17 @@ export const mockApi = createApi({
 
 export const {
   useGetDashboardQuery,
-  useGetCampaignsQuery, useCreateCampaignMutation, useUpdateCampaignMutation, useDeleteCampaignMutation,
-  useGetDiscountsQuery, useCreateDiscountMutation, useUpdateDiscountMutation, useDeleteDiscountMutation,
-  useGetBlogsQuery, useGetBlogQuery, useCreateBlogMutation, useUpdateBlogMutation, useDeleteBlogMutation,
+  useGetCampaignsQuery,
+  useCreateCampaignMutation,
+  useUpdateCampaignMutation,
+  useDeleteCampaignMutation,
+  useGetDiscountsQuery,
+  useCreateDiscountMutation,
+  useUpdateDiscountMutation,
+  useDeleteDiscountMutation,
+  useGetBlogsQuery,
+  useGetBlogQuery,
+  useCreateBlogMutation,
+  useUpdateBlogMutation,
+  useDeleteBlogMutation,
 } = mockApi;

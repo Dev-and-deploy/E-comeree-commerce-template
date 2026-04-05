@@ -29,7 +29,7 @@ const Products = () => {
               />
             </div>
           </div>
-          
+
           <div className="rounded-md border">
             <div className="p-8 text-center text-muted-foreground">
               <p>No products found. Add your first product to get started.</p>

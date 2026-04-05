@@ -10,14 +10,27 @@ services:
     restart: always
 
 
+  # admin:
+  #   build: ./admin
+  #   image: admin:latest
+  #   ports:
+  #     - "8080:8080"
+  #   env_file:
+  #     - ./admin/.env
+  #   container_name: admin
+  #   restart: always
+  #   depends_on:
+  #     - backend
+
   admin:
-    build: ./admin
-    image: admin:latest
+    container_name: admin   # custom container name
+    build:
+      context: ./admin
+      args:
+        VITE_API_URL: "http://16.171.227.139:8080/api"
     ports:
       - "8080:8080"
-    env_file:
-      - ./admin/.env
-    container_name: admin
-    restart: always
     depends_on:
-      - backend
+      - backend                    # wait for backend service
+    restart: always               # auto restart container
+

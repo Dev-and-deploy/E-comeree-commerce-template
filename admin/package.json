@@ -10,7 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
-    "preview": "vite preview --host --port 8080",
+    "preview": "vite preview --host 0.0.0.0 --port 8080",
     "test": "vitest run",
     "test:watch": "vitest"
   },

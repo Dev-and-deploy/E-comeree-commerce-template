@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -25,7 +24,7 @@ const Orders = () => {
               />
             </div>
           </div>
-          
+
           <div className="rounded-md border">
             <div className="p-8 text-center text-muted-foreground">
               <p>No orders found.</p>

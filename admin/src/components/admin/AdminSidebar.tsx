@@ -3,7 +3,7 @@ import { useAppSelector, useAppDispatch } from "@/store/store";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { logout } from "@/store/slices/authSlice";
 import {
-  LayoutDashboard, Megaphone, Tags, FileText, Settings, LogOut, Moon, Sun, Menu, ChevronLeft,
+  LayoutDashboard, Megaphone, Tags, FileText, Settings, LogOut, Moon, Sun, Menu, ChevronLeft, Package, ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ import { useState } from "react";
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/admin/products", icon: Package, label: "Products" },
+  { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/marketing", icon: Megaphone, label: "Marketing" },
   { to: "/admin/discounts", icon: Tags, label: "Discounts & Coupons" },
   { to: "/admin/blogs", icon: FileText, label: "Blog Management" },

@@ -9,6 +9,8 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import Login from "@/pages/admin/Login";
 import Dashboard from "@/pages/admin/Dashboard";
+import Products from "@/pages/admin/Products";
+import Orders from "@/pages/admin/Orders";
 import Marketing from "@/pages/admin/Marketing";
 import Discounts from "@/pages/admin/Discounts";
 import Blogs from "@/pages/admin/Blogs";
@@ -36,6 +38,8 @@ const App = () => (
               }
             >
               <Route index element={<Dashboard />} />
+              <Route path="products" element={<Products />} />
+              <Route path="orders" element={<Orders />} />
               <Route path="marketing" element={<Marketing />} />
               <Route path="discounts" element={<Discounts />} />
               <Route path="blogs" element={<Blogs />} />

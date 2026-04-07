@@ -129,7 +129,7 @@ const Blogs = () => {
         <div>
           <h1 className="text-3xl font-bold">Blog Management</h1>
           <p className="text-muted-foreground">
-            Create and manage blog posts with SEO optimization
+            Create and manage blog posts with SEO optimization features
           </p>
         </div>
         <Button onClick={openCreate}>

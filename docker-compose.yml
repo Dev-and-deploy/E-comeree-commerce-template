@@ -27,7 +27,7 @@ services:
     build:
       context: ./admin
       args:
-        VITE_API_URL: "http://16.171.227.139:6000/api"
+        VITE_API_URL: "http://51.21.128.163:6000/api"
     ports:
       - "8080:8080"
     depends_on:

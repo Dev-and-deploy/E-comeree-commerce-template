@@ -4,9 +4,11 @@ import Image from "next/image";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice.js";
 import { ShoppingCart } from "lucide-react";
+import { useSettings } from "../../providers/SettingsProvider.jsx";
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
+  const { currencySymbol } = useSettings();
 
   return (
     <div className="card group">
@@ -30,9 +32,9 @@ export default function ProductCard({ product }) {
         </Link>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold">${product.price.toFixed(2)}</span>
+            <span className="font-bold">{currencySymbol}{product.price.toFixed(2)}</span>
             {product.comparePrice && (
-              <span className="text-sm text-gray-400 line-through">${product.comparePrice.toFixed(2)}</span>
+              <span className="text-sm text-gray-400 line-through">{currencySymbol}{product.comparePrice.toFixed(2)}</span>
             )}
           </div>
           <button

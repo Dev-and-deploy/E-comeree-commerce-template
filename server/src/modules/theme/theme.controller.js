@@ -45,17 +45,3 @@ export const getTemplates = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-export const getAdminSettings = async (req, res, next) => {
-  try {
-    const settings = await themeService.getAdminSettings();
-    success(res, settings);
-  } catch (err) { next(err); }
-};
-
-export const updateAdminSetting = async (req, res, next) => {
-  try {
-    const { key, value } = req.body;
-    const setting = await themeService.updateAdminSetting(key, value);
-    success(res, setting, "Setting updated");
-  } catch (err) { next(err); }
-};

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,8 +31,9 @@ import {
   useGetCategoriesQuery,
   type Product,
 } from "@/store/api/productApi";
+import { useUploadImageMutation } from "@/store/api/uploadApi";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, ImageIcon, Loader2, AlertCircle } from "lucide-react";
+import { Plus, X, ImageIcon, Loader2, AlertCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -82,8 +83,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+  const [uploadImage, { isLoading: uploading }] = useUploadImageMutation();
   const { data: categoriesData } = useGetCategoriesQuery();
   const categories = categoriesData?.data ?? [];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Images & tags managed as local state (not react-hook-form arrays for simplicity)
   const [images, setImages] = useState<string[]>([]);
@@ -163,6 +167,19 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     } catch {
       toast({ title: "Invalid URL", description: "Enter a valid image URL", variant: "destructive" });
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await uploadImage(file).unwrap();
+      setImages((prev) => [...prev, result.data.url]);
+      toast({ title: "Image uploaded", description: "Added to product images." });
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload image.", variant: "destructive" });
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const addTag = () => {
@@ -330,8 +347,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
                 {/* ── Media ── */}
                 <TabsContent value="media" className="space-y-4 mt-0">
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Label>Product Images</Label>
+
+                    {/* URL input */}
                     <div className="flex gap-2">
                       <Input
                         value={imageInput}
@@ -344,8 +363,38 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
+
+                    {/* File upload */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="gap-1.5"
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        {uploading ? "Uploading…" : "Upload File"}
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Max 5 MB · JPEG, PNG, WebP, GIF
+                      </span>
+                    </div>
+
                     <p className="text-xs text-muted-foreground">
-                      Enter image URLs. First image is used as the primary thumbnail.
+                      First image is used as the primary thumbnail.
                     </p>
                   </div>
 

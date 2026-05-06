@@ -47,12 +47,4 @@ export class ThemeService {
     return this.repo.getTemplates();
   }
 
-  async getAdminSettings() {
-    const settings = await this.repo.getAdminSettings();
-    return settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {});
-  }
-
-  async updateAdminSetting(key, value) {
-    return this.repo.upsertAdminSetting(key, String(value));
-  }
 }

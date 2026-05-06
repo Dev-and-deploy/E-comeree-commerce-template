@@ -52,6 +52,13 @@ export const getCategories = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+export const getAdminCategories = async (req, res, next) => {
+  try {
+    const categories = await productService.getAllCategories();
+    success(res, categories);
+  } catch (err) { next(err); }
+};
+
 export const createCategory = async (req, res, next) => {
   try {
     const category = await productService.createCategory(req.body);

@@ -55,3 +55,6 @@ export const fetchProduct = (slug) =>
 
 export const fetchCategories = () =>
   fetch(`${API_URL}/products/categories`, { next: { revalidate: 600 } }).then((r) => r.json());
+
+export const fetchStoreSettings = () =>
+  fetch(`${API_URL}/settings/public`, { next: { revalidate: 300 } }).then((r) => r.json());

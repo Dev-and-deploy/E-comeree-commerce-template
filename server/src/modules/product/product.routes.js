@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getProducts, getProduct, createProduct, updateProduct, deleteProduct, getAdminProducts,
-  getCategories, createCategory, updateCategory, deleteCategory,
+  getCategories, createCategory, updateCategory, deleteCategory, getAdminCategories,
 } from "./product.controller.js";
 import { authenticate } from "../../shared/middleware/auth.middleware.js";
 import { authorize } from "../../shared/middleware/role.middleware.js";
@@ -18,6 +18,7 @@ router.get("/:slug", getProduct);
 router.use(authenticate, authorize(...ADMIN_ROLES));
 
 router.get("/admin/all", getAdminProducts);
+router.get("/admin/categories", getAdminCategories);
 router.post("/", validate(createProductSchema), createProduct);
 router.patch("/:id", validate(updateProductSchema), updateProduct);
 router.delete("/:id", deleteProduct);

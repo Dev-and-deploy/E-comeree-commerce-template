@@ -1,4 +1,5 @@
 import { useGetDashboardQuery } from "@/store/api/mockApi";
+import { useCurrencySymbol } from "@/lib/currency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -41,6 +42,7 @@ const statusColor: Record<string, string> = {
 
 const Dashboard = () => {
   const { data, isLoading } = useGetDashboardQuery();
+  const symbol = useCurrencySymbol();
 
   if (isLoading || !data) {
     return (
@@ -58,7 +60,7 @@ const Dashboard = () => {
   const stats = [
     {
       label: "Total Revenue",
-      value: `$${data.totalRevenue.toLocaleString()}`,
+      value: `${symbol}${data.totalRevenue.toLocaleString()}`,
       change: data.revenueChange,
     },
     {

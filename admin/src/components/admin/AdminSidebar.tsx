@@ -19,6 +19,7 @@ import {
   Users,
   Palette,
   Layout,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ import { useState } from "react";
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/products", icon: Package, label: "Products" },
+  { to: "/admin/categories", icon: FolderOpen, label: "Categories" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/marketing", icon: Megaphone, label: "Marketing" },

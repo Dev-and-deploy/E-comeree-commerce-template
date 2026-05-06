@@ -14,6 +14,7 @@ import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import Login from "@/pages/admin/Login";
 import Dashboard from "@/pages/admin/Dashboard";
 import Products from "@/pages/admin/Products";
+import Categories from "@/pages/admin/Categories";
 import Orders from "@/pages/admin/Orders";
 import Marketing from "@/pages/admin/Marketing";
 import Discounts from "@/pages/admin/Discounts";
@@ -72,6 +73,7 @@ const AppRoutes = () => (
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<Products />} />
+        <Route path="categories" element={<Categories />} />
         <Route path="orders" element={<Orders />} />
         <Route path="users" element={<Users />} />
         <Route path="marketing" element={<Marketing />} />

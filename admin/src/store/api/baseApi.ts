@@ -98,6 +98,7 @@ export const baseApi = createApi({
     "Campaigns",
     "Discounts",
     "Blogs",
+    "Settings",
   ],
   endpoints: () => ({}),
 });

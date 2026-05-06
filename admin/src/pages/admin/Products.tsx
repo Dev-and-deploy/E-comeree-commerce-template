@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isValid } from "date-fns";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Package, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ProductForm } from "@/components/products/ProductForm";
@@ -31,20 +39,22 @@ import {
   type Product,
 } from "@/store/api/productApi";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencySymbol } from "@/lib/currency";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const Products = () => {
   const { toast } = useToast();
+  const symbol = useCurrencySymbol();
   const [searchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
 
   const { data: categoriesRes } = useGetCategoriesQuery();
   const categories = categoriesRes?.data ?? [];
 
-  // Build query params from URL
   const queryParams = {
     page: parseInt(searchParams.get("page") ?? "1", 10),
     limit: parseInt(searchParams.get("limit") ?? "10", 10),
@@ -86,7 +96,7 @@ const Products = () => {
     setFormOpen(true);
   };
 
-  // ── Column definitions ──────────────────────────────────────────────────────
+  // ── Columns ──────────────────────────────────────────────────────────────────
 
   const columns: DataTableColumn<Product>[] = [
     {
@@ -100,9 +110,7 @@ const Products = () => {
               src={row.images[0]}
               alt={row.name}
               className="h-full w-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -150,10 +158,10 @@ const Products = () => {
       sortable: true,
       cell: (row) => (
         <div className="text-sm">
-          <span className="font-semibold">${row.price.toFixed(2)}</span>
+          <span className="font-semibold">{symbol}{row.price.toFixed(2)}</span>
           {row.comparePrice && (
             <span className="ml-1.5 text-xs text-muted-foreground line-through">
-              ${row.comparePrice.toFixed(2)}
+              {symbol}{row.comparePrice.toFixed(2)}
             </span>
           )}
         </div>
@@ -175,11 +183,7 @@ const Products = () => {
     {
       key: "isActive",
       header: "Status",
-      filter: {
-        type: "boolean",
-        paramKey: "isActive",
-        placeholder: "All",
-      },
+      filter: { type: "boolean", paramKey: "isActive", placeholder: "All" },
       cell: (row) =>
         row.isActive ? (
           <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 gap-1 text-xs">
@@ -187,10 +191,7 @@ const Products = () => {
             Active
           </Badge>
         ) : (
-          <Badge
-            variant="secondary"
-            className="text-muted-foreground gap-1 text-xs"
-          >
+          <Badge variant="secondary" className="text-muted-foreground gap-1 text-xs">
             <EyeOff className="h-3 w-3" />
             Inactive
           </Badge>
@@ -199,10 +200,7 @@ const Products = () => {
     {
       key: "isFeatured",
       header: "Featured",
-      filter: {
-        type: "boolean",
-        paramKey: "isFeatured",
-      },
+      filter: { type: "boolean", paramKey: "isFeatured" },
       cell: (row) =>
         row.isFeatured ? (
           <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 gap-1 text-xs">
@@ -232,11 +230,25 @@ const Products = () => {
     {
       key: "actions",
       header: "Actions",
-      width: "90px",
+      width: "110px",
       headerClassName: "text-right pr-4",
       className: "text-right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setViewProduct(row)}
+              >
+                <Info className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>View details</TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -273,7 +285,6 @@ const Products = () => {
 
   return (
     <div className="space-y-5 p-6">
-      {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Products</h1>
@@ -285,7 +296,6 @@ const Products = () => {
         </div>
       </div>
 
-      {/* DataTable */}
       <DataTable<Product>
         columns={columns}
         data={products}
@@ -323,6 +333,13 @@ const Products = () => {
         product={editProduct}
       />
 
+      {/* Product detail sheet */}
+      <Sheet open={!!viewProduct} onOpenChange={(open) => !open && setViewProduct(null)}>
+        <SheetContent className="w-[420px] sm:w-[520px] p-0">
+          {viewProduct && <ProductDetailSheet product={viewProduct} symbol={symbol} />}
+        </SheetContent>
+      </Sheet>
+
       {/* Delete confirmation */}
       <AlertDialog
         open={!!deleteTarget}
@@ -333,8 +350,7 @@ const Products = () => {
             <AlertDialogTitle>Delete product?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete{" "}
-              <strong>"{deleteTarget?.name}"</strong>. This action cannot be
-              undone.
+              <strong>"{deleteTarget?.name}"</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -352,5 +368,170 @@ const Products = () => {
     </div>
   );
 };
+
+// ─── Product Detail Sheet ─────────────────────────────────────────────────────
+
+function ProductDetailSheet({ product, symbol }: { product: Product; symbol: string }) {
+  const [activeImg, setActiveImg] = useState(0);
+
+  const formatDate = (iso?: string) => {
+    if (!iso) return "—";
+    const d = parseISO(iso);
+    return isValid(d) ? format(d, "MMM d, yyyy, h:mm a") : "—";
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+        <div className="flex items-start gap-3">
+          <div className="h-12 w-12 rounded-lg overflow-hidden border bg-muted flex items-center justify-center shrink-0">
+            {product.images?.[0] ? (
+              <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <Package className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <SheetTitle className="text-lg leading-tight">{product.name}</SheetTitle>
+            <p className="text-xs text-muted-foreground font-mono mt-0.5">{product.slug}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {product.isActive ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs gap-1">
+              <Eye className="h-3 w-3" />Active
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs gap-1">
+              <EyeOff className="h-3 w-3" />Inactive
+            </Badge>
+          )}
+          {product.isFeatured && (
+            <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1">
+              <Star className="h-3 w-3 fill-current" />Featured
+            </Badge>
+          )}
+          {product.category && (
+            <Badge variant="outline" className="text-xs">{product.category.name}</Badge>
+          )}
+        </div>
+      </SheetHeader>
+
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-4 space-y-5">
+          {/* Images gallery */}
+          {product.images?.length > 0 && (
+            <div className="space-y-2">
+              <div className="aspect-video rounded-lg overflow-hidden border bg-muted">
+                <img
+                  src={product.images[activeImg]}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              </div>
+              {product.images.length > 1 && (
+                <div className="flex gap-2 flex-wrap">
+                  {product.images.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImg(i)}
+                      className={`h-12 w-12 rounded-md overflow-hidden border-2 transition-colors ${
+                        i === activeImg ? "border-primary" : "border-transparent"
+                      }`}
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pricing */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Pricing</p>
+            <div className="grid grid-cols-2 gap-3">
+              <DetailRow label="Price" value={`${symbol}${product.price.toFixed(2)}`} />
+              <DetailRow
+                label="Compare Price"
+                value={product.comparePrice ? `${symbol}${product.comparePrice.toFixed(2)}` : "—"}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Inventory */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Inventory</p>
+            <div className="grid grid-cols-2 gap-3">
+              <DetailRow label="Stock" value={String(product.stock)} />
+              <DetailRow label="SKU" value={product.sku || "—"} />
+            </div>
+          </div>
+
+          {/* Description */}
+          {product.description && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Description</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+              </div>
+            </>
+          )}
+
+          {/* Tags */}
+          {product.tags?.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* SEO */}
+          {(product.seoTitle || product.seoDesc || product.seoKeywords) && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">SEO</p>
+                <div className="space-y-2">
+                  {product.seoTitle && <DetailRow label="Title" value={product.seoTitle} />}
+                  {product.seoDesc && <DetailRow label="Description" value={product.seoDesc} />}
+                  {product.seoKeywords && <DetailRow label="Keywords" value={product.seoKeywords} />}
+                </div>
+              </div>
+            </>
+          )}
+
+          <Separator />
+
+          {/* Dates */}
+          <div className="space-y-2">
+            <DetailRow label="Created" value={formatDate(product.createdAt)} />
+            <DetailRow label="Updated" value={formatDate(product.updatedAt)} />
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium break-words">{value}</p>
+    </div>
+  );
+}
 
 export default Products;

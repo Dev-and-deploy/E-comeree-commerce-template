@@ -36,6 +36,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Trash2 } from "lucide-react";
 import { Discount } from "@/store/api/mockData";
+import { useCurrencySymbol } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   active: "default",
@@ -51,6 +52,7 @@ const typeLabels: Record<string, string> = {
 
 const Discounts = () => {
   const { data: discounts, isLoading } = useGetDiscountsQuery();
+  const symbol = useCurrencySymbol();
   const [createDiscount] = useCreateDiscountMutation();
   const [deleteDiscount] = useDeleteDiscountMutation();
   const [open, setOpen] = useState(false);
@@ -180,10 +182,10 @@ const Discounts = () => {
                     {d.type === "percentage" || d.type === "buy_x_get_y"
                       ? `${d.value}%`
                       : d.type === "fixed"
-                        ? `$${d.value}`
+                        ? `${symbol}${d.value}`
                         : "—"}
                   </TableCell>
-                  <TableCell>${d.minOrder}</TableCell>
+                  <TableCell>{symbol}{d.minOrder}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="text-xs text-muted-foreground">
@@ -267,7 +269,7 @@ const Discounts = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Min Order ($)</Label>
+                <Label>Min Order ({symbol})</Label>
                 <Input
                   type="number"
                   value={form.minOrder}

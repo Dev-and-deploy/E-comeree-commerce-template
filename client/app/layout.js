@@ -1,6 +1,7 @@
 import "./globals.css";
 import ReduxProvider from "../providers/ReduxProvider.jsx";
-import { fetchActiveTheme } from "../lib/api.js";
+import { SettingsProvider } from "../providers/SettingsProvider.jsx";
+import { fetchActiveTheme, fetchStoreSettings } from "../lib/api.js";
 import { buildCssVariables } from "../lib/theme.js";
 
 export async function generateMetadata() {
@@ -20,11 +21,17 @@ export async function generateMetadata() {
 export default async function RootLayout({ children }) {
   let themeConfig = null;
   let cssVars = {};
+  let storeSettings = null;
 
   try {
     const res = await fetchActiveTheme();
     themeConfig = res?.data || null;
     if (themeConfig) cssVars = buildCssVariables(themeConfig);
+  } catch {}
+
+  try {
+    const res = await fetchStoreSettings();
+    storeSettings = res?.data || null;
   } catch {}
 
   const cssVarString = Object.entries(cssVars)
@@ -44,7 +51,9 @@ export default async function RootLayout({ children }) {
       </head>
       <body>
         <ReduxProvider>
-          {children}
+          <SettingsProvider settings={storeSettings}>
+            {children}
+          </SettingsProvider>
         </ReduxProvider>
       </body>
     </html>

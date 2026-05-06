@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { OrderRepository } from "./order.repository.js";
 import { ProductRepository } from "../product/product.repository.js";
+import { SettingsService } from "../settings/settings.service.js";
 import { ApiError } from "../../shared/errors/ApiError.js";
 import config from "../../core/config/index.js";
 import { addOrderJob, addEmailJob } from "../../core/queue/index.js";
@@ -13,6 +14,7 @@ export class OrderService {
   constructor() {
     this.repo = new OrderRepository();
     this.productRepo = new ProductRepository();
+    this.settingsService = new SettingsService();
   }
 
   #generateOrderNumber() {
@@ -32,7 +34,11 @@ export class OrderService {
       orderItems.push({ productId: product.id, quantity: item.quantity, price: product.price, name: product.name, image: product.images[0] || null });
     }
 
-    const tax = parseFloat((subtotal * 0.1).toFixed(2));
+    const storeSettings = await this.settingsService.getPublic();
+    const taxRate = parseFloat(storeSettings.taxRate || "10") / 100;
+    const currency = (storeSettings.currency || "USD").toLowerCase();
+
+    const tax = parseFloat((subtotal * taxRate).toFixed(2));
     const total = parseFloat((subtotal + tax).toFixed(2));
 
     const order = await this.repo.create({
@@ -48,7 +54,7 @@ export class OrderService {
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(total * 100),
-      currency: "usd",
+      currency,
       metadata: { orderId: order.id, orderNumber: order.orderNumber },
     });
 

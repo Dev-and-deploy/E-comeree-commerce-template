@@ -112,6 +112,10 @@ export class ProductService {
     return this.repo.findCategories();
   }
 
+  getAllCategories() {
+    return this.repo.findAllCategories();
+  }
+
   async createCategory(data) {
     const existing = await this.repo.findCategoryBySlug(data.slug);
     if (existing) throw ApiError.conflict("Category slug already exists");

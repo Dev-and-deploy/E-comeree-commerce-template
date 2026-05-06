@@ -74,6 +74,10 @@ export const productApi = baseApi.injectEndpoints({
       query: () => "/products/categories",
       providesTags: ["Categories"],
     }),
+    getAdminCategories: builder.query<{ data: Category[] }, void>({
+      query: () => "/products/admin/categories",
+      providesTags: ["Categories"],
+    }),
     createCategory: builder.mutation<{ data: Category }, Partial<Category>>({
       query: (body) => ({ url: "/products/categories", method: "POST", body }),
       invalidatesTags: ["Categories"],
@@ -95,6 +99,7 @@ export const {
   useUpdateProductMutation,
   useDeleteProductMutation,
   useGetCategoriesQuery,
+  useGetAdminCategoriesQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,

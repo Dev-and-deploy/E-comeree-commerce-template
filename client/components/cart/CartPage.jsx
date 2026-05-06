@@ -4,11 +4,17 @@ import { selectCartItems, selectCartTotal, removeFromCart, updateQuantity, clear
 import Link from "next/link";
 import Image from "next/image";
 import { Trash2 } from "lucide-react";
+import { useSettings } from "../../providers/SettingsProvider.jsx";
 
 export default function CartPage() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
-  const total = useSelector(selectCartTotal);
+  const subtotal = useSelector(selectCartTotal);
+  const { currencySymbol, taxRate, freeShippingThreshold } = useSettings();
+
+  const tax = parseFloat((subtotal * (taxRate / 100)).toFixed(2));
+  const shippingFree = freeShippingThreshold === 0 || subtotal >= freeShippingThreshold;
+  const total = parseFloat((subtotal + tax).toFixed(2));
 
   if (!items.length) {
     return (
@@ -35,7 +41,7 @@ export default function CartPage() {
               </div>
               <div className="flex-1">
                 <h3 className="font-medium">{item.name}</h3>
-                <p className="text-accent font-bold">${item.price.toFixed(2)}</p>
+                <p className="text-accent font-bold">{currencySymbol}{item.price.toFixed(2)}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <button onClick={() => dispatch(removeFromCart(item.id))} className="text-red-500 hover:text-red-700">
@@ -46,7 +52,7 @@ export default function CartPage() {
                   <span className="px-3 py-1 border-x">{item.quantity}</span>
                   <button className="px-2 py-1" onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}>+</button>
                 </div>
-                <span className="text-sm font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="text-sm font-semibold">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
               </div>
             </div>
           ))}
@@ -56,10 +62,28 @@ export default function CartPage() {
         <div className="p-6 border rounded-lg bg-white h-fit">
           <h2 className="font-bold text-xl mb-4">Order Summary</h2>
           <div className="space-y-2 mb-4 text-sm">
-            <div className="flex justify-between"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span className="text-green-600">Free</span></div>
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Tax ({taxRate}%)</span>
+              <span>{currencySymbol}{tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping</span>
+              <span className={shippingFree ? "text-green-600" : ""}>
+                {shippingFree ? "Free" : `${currencySymbol}${freeShippingThreshold.toFixed(2)}`}
+              </span>
+            </div>
+            {!shippingFree && (
+              <p className="text-xs text-gray-400">
+                Add {currencySymbol}{(freeShippingThreshold - subtotal).toFixed(2)} more for free shipping
+              </p>
+            )}
             <div className="flex justify-between font-bold text-base border-t pt-2">
-              <span>Total</span><span>${total.toFixed(2)}</span>
+              <span>Total</span>
+              <span>{currencySymbol}{total.toFixed(2)}</span>
             </div>
           </div>
           <Link href="/checkout" className="btn-primary w-full text-center block">Proceed to Checkout</Link>

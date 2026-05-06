@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice.js";
 import { ShoppingCart, Heart } from "lucide-react";
+import { useSettings } from "../../providers/SettingsProvider.jsx";
 
 export default function ProductDetail({ product }) {
   const dispatch = useDispatch();
+  const { currencySymbol } = useSettings();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
@@ -39,9 +41,9 @@ export default function ProductDetail({ product }) {
           </nav>
           <h1 className="text-3xl font-bold">{product.name}</h1>
           <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-bold">${product.price.toFixed(2)}</span>
+            <span className="text-2xl font-bold">{currencySymbol}{product.price.toFixed(2)}</span>
             {product.comparePrice && (
-              <span className="text-gray-400 line-through">${product.comparePrice.toFixed(2)}</span>
+              <span className="text-gray-400 line-through">{currencySymbol}{product.comparePrice.toFixed(2)}</span>
             )}
           </div>
           <p className="text-gray-600 leading-relaxed">{product.description}</p>

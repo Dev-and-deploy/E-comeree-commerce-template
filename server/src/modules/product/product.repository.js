@@ -42,6 +42,10 @@ export class ProductRepository {
     return prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
   }
 
+  findAllCategories() {
+    return prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+  }
+
   findCategoryBySlug(slug) {
     return prisma.category.findUnique({ where: { slug } });
   }

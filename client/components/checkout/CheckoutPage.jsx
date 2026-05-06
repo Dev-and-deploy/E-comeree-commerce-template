@@ -4,16 +4,21 @@ import { useSelector } from "react-redux";
 import { selectCartItems, selectCartTotal } from "../../store/slices/cartSlice.js";
 import { api } from "../../lib/api.js";
 import { useRouter } from "next/navigation";
+import { useSettings } from "../../providers/SettingsProvider.jsx";
 
 export default function CheckoutPage() {
   const items = useSelector(selectCartItems);
-  const total = useSelector(selectCartTotal);
+  const subtotal = useSelector(selectCartTotal);
   const router = useRouter();
+  const { currencySymbol, taxRate } = useSettings();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "", email: "", address: "", city: "", country: "US", zip: "",
   });
+
+  const tax = parseFloat((subtotal * (taxRate / 100)).toFixed(2));
+  const total = parseFloat((subtotal + tax).toFixed(2));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,12 +77,23 @@ export default function CheckoutPage() {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span>{item.name} × {item.quantity}</span>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                <span>{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
               </div>
             ))}
           </div>
-          <div className="border-t pt-3 flex justify-between font-bold">
-            <span>Total</span><span>${total.toFixed(2)}</span>
+          <div className="border-t pt-3 space-y-2 text-sm">
+            <div className="flex justify-between text-gray-500">
+              <span>Subtotal</span>
+              <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-500">
+              <span>Tax ({taxRate}%)</span>
+              <span>{currencySymbol}{tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-base border-t pt-2">
+              <span>Total</span>
+              <span>{currencySymbol}{total.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       </div>

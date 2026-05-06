@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useCurrencySymbol } from "@/lib/currency";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -81,6 +82,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const { toast } = useToast();
   const isEdit = !!product;
 
+  const currencySymbol = useCurrencySymbol();
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
   const [uploadImage, { isLoading: uploading }] = useUploadImageMutation();
@@ -274,7 +276,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="price">
-                        Price ($) <span className="text-destructive">*</span>
+                        Price ({currencySymbol}) <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="price"
@@ -288,7 +290,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="comparePrice">Compare Price ($)</Label>
+                      <Label htmlFor="comparePrice">Compare Price ({currencySymbol})</Label>
                       <Input
                         id="comparePrice"
                         type="number"

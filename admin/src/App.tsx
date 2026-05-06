@@ -21,6 +21,7 @@ import Discounts from "@/pages/admin/Discounts";
 import Blogs from "@/pages/admin/Blogs";
 import Settings from "@/pages/admin/Settings";
 import Users from "@/pages/admin/Users";
+import Admins from "@/pages/admin/Admins";
 import ThemeCustomizer from "@/pages/admin/ThemeCustomizer";
 import Templates from "@/pages/admin/Templates";
 import NotFound from "./pages/NotFound";
@@ -81,6 +82,14 @@ const AppRoutes = () => (
         <Route path="blogs" element={<Blogs />} />
         <Route path="theme" element={<ThemeCustomizer />} />
         <Route path="templates" element={<Templates />} />
+        <Route
+          path="admins"
+          element={
+            <ProtectedRoute requiredRole="super_admin">
+              <Admins />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="settings"
           element={

@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice.js";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useSettings } from "../../providers/SettingsProvider.jsx";
+import { shouldBypassNextImageOptimization } from "../../lib/images.js";
 
 export default function ProductDetail({ product }) {
   const dispatch = useDispatch();
@@ -18,7 +19,13 @@ export default function ProductDetail({ product }) {
         <div>
           <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
             {product.images?.[activeImg] ? (
-              <Image src={product.images[activeImg]} alt={product.name} fill className="object-cover" />
+              <Image
+                src={product.images[activeImg]}
+                alt={product.name}
+                fill
+                unoptimized={shouldBypassNextImageOptimization(product.images[activeImg])}
+                className="object-cover"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
             )}
@@ -28,7 +35,13 @@ export default function ProductDetail({ product }) {
               {product.images.map((img, i) => (
                 <button key={i} onClick={() => setActiveImg(i)}
                   className={`relative w-16 h-16 rounded overflow-hidden border-2 ${activeImg === i ? "border-accent" : "border-transparent"}`}>
-                  <Image src={img} alt="" fill className="object-cover" />
+                  <Image
+                    src={img}
+                    alt=""
+                    fill
+                    unoptimized={shouldBypassNextImageOptimization(img)}
+                    className="object-cover"
+                  />
                 </button>
               ))}
             </div>

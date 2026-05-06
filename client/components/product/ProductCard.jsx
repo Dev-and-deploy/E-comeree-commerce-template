@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice.js";
 import { ShoppingCart } from "lucide-react";
 import { useSettings } from "../../providers/SettingsProvider.jsx";
+import { shouldBypassNextImageOptimization } from "../../lib/images.js";
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
@@ -15,7 +16,13 @@ export default function ProductCard({ product }) {
       <Link href={`/products/${product.slug}`}>
         <div className="relative aspect-square overflow-hidden bg-gray-100">
           {product.images?.[0] ? (
-            <Image src={product.images[0]} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              unoptimized={shouldBypassNextImageOptimization(product.images[0])}
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No image</div>
           )}

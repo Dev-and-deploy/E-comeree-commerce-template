@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isValid } from "date-fns";
 import {
@@ -115,32 +115,31 @@ function TextFilter({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlValue = searchParams.get(paramKey) ?? "";
   const [local, setLocal] = useState(urlValue);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    setLocal(searchParams.get(paramKey) ?? "");
-  }, [searchParams, paramKey]);
+    if (urlValue !== local) setLocal(urlValue);
+  }, [urlValue]);
 
-  const push = (val: string) => {
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
+  useEffect(() => {
+    if (local === urlValue) return;
+
+    const timer = setTimeout(() => {
       setSearchParams((prev) => {
         const p = new URLSearchParams(prev);
-        val ? p.set(paramKey, val) : p.delete(paramKey);
+        local ? p.set(paramKey, local) : p.delete(paramKey);
         p.set("page", "1");
         return p;
       });
-    }, 380);
-  };
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [local, paramKey, setSearchParams, urlValue]);
 
   return (
     <div className="relative">
       <Input
         value={local}
-        onChange={(e) => {
-          setLocal(e.target.value);
-          push(e.target.value);
-        }}
+        onChange={(e) => setLocal(e.target.value)}
         placeholder={placeholder ?? "Filter…"}
         className="h-7 text-xs pr-6 bg-background"
       />

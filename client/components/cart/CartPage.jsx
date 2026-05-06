@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Trash2 } from "lucide-react";
 import { useSettings } from "../../providers/SettingsProvider.jsx";
+import { shouldBypassNextImageOptimization } from "../../lib/images.js";
 
 export default function CartPage() {
   const dispatch = useDispatch();
@@ -34,7 +35,13 @@ export default function CartPage() {
             <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-white">
               <div className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                 {item.images?.[0] ? (
-                  <Image src={item.images[0]} alt={item.name} fill className="object-cover" />
+                  <Image
+                    src={item.images[0]}
+                    alt={item.name}
+                    fill
+                    unoptimized={shouldBypassNextImageOptimization(item.images[0])}
+                    className="object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
                 )}

@@ -18,6 +18,16 @@ export class ProductRepository {
     });
   }
 
+  findActiveBySlug(slug) {
+    return prisma.product.findFirst({
+      where: { slug, isActive: true, category: { isActive: true } },
+      include: {
+        category: true,
+        reviews: { where: { isApproved: true }, include: { user: { select: { name: true, avatar: true } } } },
+      },
+    });
+  }
+
   findById(id) {
     return prisma.product.findUnique({ where: { id }, include: { category: true } });
   }
@@ -30,35 +40,11 @@ export class ProductRepository {
     return prisma.product.update({ where: { id }, data, include: { category: true } });
   }
 
-  delete(id) {
-    return prisma.product.delete({ where: { id } });
+  softDelete(id) {
+    return prisma.product.update({ where: { id }, data: { isActive: false } });
   }
 
   updateStock(id, quantity) {
     return prisma.product.update({ where: { id }, data: { stock: { decrement: quantity } } });
-  }
-
-  findCategories() {
-    return prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
-  }
-
-  findAllCategories() {
-    return prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
-  }
-
-  findCategoryBySlug(slug) {
-    return prisma.category.findUnique({ where: { slug } });
-  }
-
-  createCategory(data) {
-    return prisma.category.create({ data });
-  }
-
-  updateCategory(id, data) {
-    return prisma.category.update({ where: { id }, data });
-  }
-
-  deleteCategory(id) {
-    return prisma.category.delete({ where: { id } });
   }
 }

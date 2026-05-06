@@ -52,6 +52,13 @@ export interface AdminProductParams {
   sortOrder?: string;
 }
 
+export interface AdminCategoryParams {
+  search?: string;
+  isActive?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
 export const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAdminProducts: builder.query<PaginatedResponse<Product>, AdminProductParams>({
@@ -71,23 +78,23 @@ export const productApi = baseApi.injectEndpoints({
       invalidatesTags: ["Products"],
     }),
     getCategories: builder.query<{ data: Category[] }, void>({
-      query: () => "/products/categories",
+      query: () => "/categories",
       providesTags: ["Categories"],
     }),
-    getAdminCategories: builder.query<{ data: Category[] }, void>({
-      query: () => "/products/admin/categories",
+    getAdminCategories: builder.query<{ data: Category[] }, AdminCategoryParams | void>({
+      query: (params) => ({ url: "/categories/admin", params }),
       providesTags: ["Categories"],
     }),
     createCategory: builder.mutation<{ data: Category }, Partial<Category>>({
-      query: (body) => ({ url: "/products/categories", method: "POST", body }),
+      query: (body) => ({ url: "/categories", method: "POST", body }),
       invalidatesTags: ["Categories"],
     }),
     updateCategory: builder.mutation<{ data: Category }, Partial<Category> & { id: string }>({
-      query: ({ id, ...body }) => ({ url: `/products/categories/${id}`, method: "PATCH", body }),
+      query: ({ id, ...body }) => ({ url: `/categories/${id}`, method: "PATCH", body }),
       invalidatesTags: ["Categories"],
     }),
     deleteCategory: builder.mutation<void, string>({
-      query: (id) => ({ url: `/products/categories/${id}`, method: "DELETE" }),
+      query: (id) => ({ url: `/categories/${id}`, method: "DELETE" }),
       invalidatesTags: ["Categories"],
     }),
   }),

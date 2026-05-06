@@ -10,9 +10,9 @@ export class ProductService {
 
   async getProducts(query) {
     const { page, limit, skip } = getPagination(query);
-    const where = { isActive: true };
+    const where = { isActive: true, category: { isActive: true } };
 
-    if (query.category) where.category = { slug: query.category };
+    if (query.category) where.category = { slug: query.category, isActive: true };
     if (query.search) where.OR = [
       { name: { contains: query.search, mode: "insensitive" } },
       { description: { contains: query.search, mode: "insensitive" } },
@@ -35,7 +35,7 @@ export class ProductService {
     const cached = await cacheGet(cacheKey);
     if (cached) return cached;
 
-    const product = await this.repo.findBySlug(slug);
+    const product = await this.repo.findActiveBySlug(slug);
     if (!product) throw ApiError.notFound("Product not found");
 
     await cacheSet(cacheKey, product, 300);
@@ -62,8 +62,9 @@ export class ProductService {
   async deleteProduct(id) {
     const product = await this.repo.findById(id);
     if (!product) throw ApiError.notFound("Product not found");
-    await this.repo.delete(id);
+    await this.repo.softDelete(id);
     await cacheDel(`product:${product.slug}`);
+    await cacheDelPattern("products:*");
   }
 
   async getAdminProducts(query) {
@@ -106,27 +107,5 @@ export class ProductService {
       skip, limit, where, orderBy: { [sortBy]: sortOrder },
     });
     return { products, pagination: buildPaginationMeta(total, page, limit) };
-  }
-
-  getCategories() {
-    return this.repo.findCategories();
-  }
-
-  getAllCategories() {
-    return this.repo.findAllCategories();
-  }
-
-  async createCategory(data) {
-    const existing = await this.repo.findCategoryBySlug(data.slug);
-    if (existing) throw ApiError.conflict("Category slug already exists");
-    return this.repo.createCategory(data);
-  }
-
-  async updateCategory(id, data) {
-    return this.repo.updateCategory(id, data);
-  }
-
-  async deleteCategory(id) {
-    return this.repo.deleteCategory(id);
   }
 }

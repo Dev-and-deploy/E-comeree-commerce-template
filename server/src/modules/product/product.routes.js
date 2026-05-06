@@ -1,30 +1,27 @@
 import { Router } from "express";
 import {
   getProducts, getProduct, createProduct, updateProduct, deleteProduct, getAdminProducts,
-  getCategories, createCategory, updateCategory, deleteCategory, getAdminCategories,
 } from "./product.controller.js";
+import categoryRoutes from "../category/category.routes.js";
+import { getAdminCategories } from "../category/category.controller.js";
 import { authenticate } from "../../shared/middleware/auth.middleware.js";
 import { authorize } from "../../shared/middleware/role.middleware.js";
 import { validate } from "../../shared/middleware/validate.middleware.js";
-import { createProductSchema, updateProductSchema, createCategorySchema } from "./product.validation.js";
+import { createProductSchema, updateProductSchema } from "./product.validation.js";
 import { ADMIN_ROLES } from "../../shared/constants/roles.js";
 
 const router = Router();
+const requireAdmin = [authenticate, authorize(...ADMIN_ROLES)];
 
 router.get("/", getProducts);
-router.get("/categories", getCategories);
+router.use("/categories", categoryRoutes);
+
+router.get("/admin/all", requireAdmin, getAdminProducts);
+router.get("/admin/categories", requireAdmin, getAdminCategories);
+router.post("/", requireAdmin, validate(createProductSchema), createProduct);
+router.patch("/:id", requireAdmin, validate(updateProductSchema), updateProduct);
+router.delete("/:id", requireAdmin, deleteProduct);
+
 router.get("/:slug", getProduct);
-
-router.use(authenticate, authorize(...ADMIN_ROLES));
-
-router.get("/admin/all", getAdminProducts);
-router.get("/admin/categories", getAdminCategories);
-router.post("/", validate(createProductSchema), createProduct);
-router.patch("/:id", validate(updateProductSchema), updateProduct);
-router.delete("/:id", deleteProduct);
-
-router.post("/categories", validate(createCategorySchema), createCategory);
-router.patch("/categories/:id", updateCategory);
-router.delete("/categories/:id", deleteCategory);
 
 export default router;

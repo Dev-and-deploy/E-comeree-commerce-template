@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isValid } from "date-fns";
 import { Plus, Pencil, Trash2, FolderOpen, ImageIcon } from "lucide-react";
 
@@ -34,11 +35,19 @@ import { useToast } from "@/hooks/use-toast";
 
 const Categories = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  const { data, isFetching } = useGetAdminCategoriesQuery();
+  const queryParams = {
+    search: searchParams.get("search") ?? undefined,
+    isActive: searchParams.get("isActive") ?? undefined,
+    sortBy: searchParams.get("sortBy") ?? undefined,
+    sortOrder: searchParams.get("sortOrder") ?? undefined,
+  };
+
+  const { data, isFetching } = useGetAdminCategoriesQuery(queryParams);
   const categories = data?.data ?? [];
 
   const [deleteCategory, { isLoading: deleting }] = useDeleteCategoryMutation();
@@ -139,6 +148,7 @@ const Categories = () => {
     {
       key: "createdAt",
       header: "Created",
+      sortable: true,
       cell: (row) => {
         const d = (row as Category & { createdAt?: string }).createdAt;
         const parsed = d ? parseISO(d) : null;
@@ -249,9 +259,8 @@ const Categories = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete category?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{" "}
-              <strong>"{deleteTarget?.name}"</strong>. Products in this category will
-              become uncategorised. This action cannot be undone.
+              This will mark <strong>"{deleteTarget?.name}"</strong> as inactive and hide it
+              from the store. Products in this category will stay unchanged.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

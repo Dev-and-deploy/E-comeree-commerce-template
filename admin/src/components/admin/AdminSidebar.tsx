@@ -1,7 +1,8 @@
-import { NavLink } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store/store";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { logout } from "@/store/slices/authSlice";
+import { useLogoutMutation } from "@/store/api/authApi";
 import {
   LayoutDashboard,
   Megaphone,
@@ -15,6 +16,9 @@ import {
   ChevronLeft,
   Package,
   ShoppingCart,
+  Users,
+  Palette,
+  Layout,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,17 +28,32 @@ const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/products", icon: Package, label: "Products" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+  { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/marketing", icon: Megaphone, label: "Marketing" },
   { to: "/admin/discounts", icon: Tags, label: "Discounts & Coupons" },
   { to: "/admin/blogs", icon: FileText, label: "Blog Management" },
+  { to: "/admin/theme", icon: Palette, label: "Theme Customizer" },
+  { to: "/admin/templates", icon: Layout, label: "Templates" },
 ];
 
 const AdminSidebar = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { mode } = useAppSelector((s) => s.theme);
   const { user } = useAppSelector((s) => s.auth);
   const [collapsed, setCollapsed] = useState(false);
-  const isSuperAdmin = user?.role === "super_admin";
+  const [logoutMutation] = useLogoutMutation();
+  const isSuperAdmin = user?.role === "super_admin" || user?.role === "SUPER_ADMIN";
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation().unwrap();
+    } catch {
+      // Even if the server call fails, clear local state and cookies best-effort
+    }
+    dispatch(logout());
+    navigate("/admin/login", { replace: true });
+  };
 
   return (
     <aside
@@ -128,7 +147,7 @@ const AdminSidebar = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => dispatch(logout())}
+            onClick={handleLogout}
             className="shrink-0 text-destructive"
             title="Logout"
           >

@@ -1,18 +1,33 @@
 import { Navigate } from "react-router-dom";
 import { useAppSelector } from "@/store/store";
-import { UserRole } from "@/store/slices/authSlice";
+import { Loader2 } from "lucide-react";
+import type { UserRole } from "@/store/slices/authSlice";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: UserRole;
+  requiredRole?: UserRole | "super_admin";
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, authInitialized, user } = useAppSelector((s) => s.auth);
+
+  // Wait for the /auth/me check to resolve before deciding what to render.
+  // This prevents a flash redirect to /login while the cookie is being verified.
+  if (!authInitialized) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
-  if (requiredRole && user?.role !== requiredRole)
-    return <Navigate to="/admin" replace />;
+
+  if (requiredRole) {
+    const userRole = user?.role?.toLowerCase().replace(/_/g, "") ?? "";
+    const required = requiredRole.toLowerCase().replace(/_/g, "");
+    if (userRole !== required) return <Navigate to="/admin" replace />;
+  }
 
   return <>{children}</>;
 };

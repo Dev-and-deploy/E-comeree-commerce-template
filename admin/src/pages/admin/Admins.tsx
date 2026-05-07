@@ -36,9 +36,9 @@ import { useToast } from "@/hooks/use-toast";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const ROLE_BADGE: Record<string, string> = {
-  SUPER_ADMIN: "bg-red-50 text-red-700 border-red-200",
-  ADMIN: "bg-blue-50 text-blue-700 border-blue-200",
-  EDITOR: "bg-purple-50 text-purple-700 border-purple-200",
+  SUPER_ADMIN: "bg-red-50 text-red-700 border-red-200 hover:bg-red-50",
+  ADMIN: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",
+  EDITOR: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50",
 };
 
 const ROLE_LABEL: Record<string, string> = {

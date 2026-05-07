@@ -34,6 +34,8 @@ enum PaymentStatus {
 enum CouponType {
   PERCENTAGE
   FIXED
+  FREE_SHIPPING
+  BUY_X_GET_Y
 }
 
 model User {
@@ -227,16 +229,20 @@ model Coupon {
   id             String     @id @default(uuid())
   code           String     @unique
   type           CouponType
-  value          Float
+  value          Float      @default(0)
   minOrderAmount Float?
   maxUses        Int?
   usedCount      Int        @default(0)
   isActive       Boolean    @default(true)
+  startDate      DateTime?
   expiresAt      DateTime?
+  showInBanner   Boolean    @default(false)
+  bannerTitle    String?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
   @@index([code])
+  @@index([showInBanner])
 }
 
 model Template {

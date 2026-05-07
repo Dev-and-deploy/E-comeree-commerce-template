@@ -21,6 +21,7 @@ import userRoutes from "./modules/user/user.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import uploadRoutes from "./modules/upload/upload.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import couponRoutes from "./modules/coupon/coupon.routes.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/theme", themeRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/admins", adminRoutes);
+app.use("/api/coupons", couponRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

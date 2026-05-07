@@ -58,3 +58,6 @@ export const fetchCategories = () =>
 
 export const fetchStoreSettings = () =>
   fetch(`${API_URL}/settings/public`, { next: { revalidate: 300 } }).then((r) => r.json());
+
+export const fetchBannerCoupon = () =>
+  fetch(`${API_URL}/coupons/banner`, { next: { revalidate: 300 } }).then((r) => r.json());

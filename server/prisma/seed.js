@@ -1,11 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { categories } from "./data/categories.js";
+import { products } from "./data/products.js";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // ── Admin user ─────────────────────────────────────────────────────────────
   const passwordHash = await bcrypt.hash("Admin@123", 12);
-
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin@store.com" },
     update: { role: "SUPER_ADMIN", isActive: true },
@@ -18,49 +20,20 @@ async function main() {
     },
   });
 
+  // ── Templates ──────────────────────────────────────────────────────────────
   const fashionTemplate = await prisma.template.upsert({
     where: { slug: "fashion" },
     update: {},
-    create: {
-      name: "Fashion",
-      slug: "fashion",
-      description: "Elegant fashion-forward storefront",
-      isActive: true,
-    },
+    create: { name: "Fashion", slug: "fashion", description: "Elegant fashion-forward storefront", isActive: true },
   });
 
-  await prisma.template.upsert({
-    where: { slug: "electronics" },
-    update: {},
-    create: {
-      name: "Electronics",
-      slug: "electronics",
-      description: "Tech-focused modern storefront",
-      isActive: true,
-    },
-  });
-
-  await prisma.template.upsert({
-    where: { slug: "minimal" },
-    update: {},
-    create: {
-      name: "Minimal",
-      slug: "minimal",
-      description: "Clean minimalist design",
-      isActive: true,
-    },
-  });
-
-  await prisma.template.upsert({
-    where: { slug: "modern" },
-    update: {},
-    create: {
-      name: "Modern",
-      slug: "modern",
-      description: "Bold modern commerce",
-      isActive: true,
-    },
-  });
+  for (const t of [
+    { name: "Electronics", slug: "electronics", description: "Tech-focused modern storefront" },
+    { name: "Minimal", slug: "minimal", description: "Clean minimalist design" },
+    { name: "Modern", slug: "modern", description: "Bold modern commerce" },
+  ]) {
+    await prisma.template.upsert({ where: { slug: t.slug }, update: {}, create: { ...t, isActive: true } });
+  }
 
   await prisma.themeSettings.upsert({
     where: { id: "default-theme" },
@@ -84,37 +57,29 @@ async function main() {
     },
   });
 
-  const category = await prisma.category.upsert({
-    where: { slug: "clothing" },
-    update: {},
-    create: {
-      name: "Clothing",
-      slug: "clothing",
-      description: "All clothing items",
-      isActive: true,
-    },
-  });
+  // ── Categories ─────────────────────────────────────────────────────────────
+  const createdCategories = {};
+  for (const cat of categories) {
+    const created = await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: { image: cat.image, sortOrder: cat.sortOrder },
+      create: { ...cat, isActive: true },
+    });
+    createdCategories[cat.slug] = created;
+  }
 
-  await prisma.product.upsert({
-    where: { slug: "classic-white-tee" },
-    update: {},
-    create: {
-      name: "Classic White Tee",
-      slug: "classic-white-tee",
-      description: "Timeless white t-shirt made from premium cotton.",
-      price: 29.99,
-      comparePrice: 39.99,
-      stock: 100,
-      sku: "CWT-001",
-      images: [],
-      categoryId: category.id,
-      isActive: true,
-      isFeatured: true,
-      tags: ["clothing", "basics"],
-    },
-  });
+  // ── Products ───────────────────────────────────────────────────────────────
+  for (const product of products) {
+    const { categorySlug, ...data } = product;
+    await prisma.product.upsert({
+      where: { slug: data.slug },
+      update: { images: data.images, price: data.price, comparePrice: data.comparePrice, stock: data.stock },
+      create: { ...data, categoryId: createdCategories[categorySlug].id, isActive: true },
+    });
+  }
 
-  console.log("Seed completed:", { superAdmin: superAdmin.email });
+  console.log(`Seed completed: ${products.length} products across ${categories.length} categories`);
+  console.log(`Admin login: ${superAdmin.email} / Admin@123`);
 }
 
 main()

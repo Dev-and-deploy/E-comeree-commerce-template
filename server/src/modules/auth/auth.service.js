@@ -81,7 +81,7 @@ export class AuthService {
   }
 
   #sanitize(user) {
-    const { password, refreshToken, ...safe } = user;
+    const { password: _password, refreshToken: _refreshToken, ...safe } = user;
     return safe;
   }
 }

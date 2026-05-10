@@ -17,12 +17,12 @@ export class ThemeRepository {
   }
 
   create(data) {
-    const { id: _id, template, createdAt, updatedAt, ...safe } = data;
+    const { id: _id, template: _template, createdAt: _createdAt, updatedAt: _updatedAt, ...safe } = data;
     return prisma.themeSettings.create({ data: safe, include: { template: true } });
   }
 
   update(id, data) {
-    const { id: _id, template, createdAt, updatedAt, ...safe } = data;
+    const { id: _id, template: _template, createdAt: _createdAt, updatedAt: _updatedAt, ...safe } = data;
     return prisma.themeSettings.update({ where: { id }, data: safe, include: { template: true } });
   }
 

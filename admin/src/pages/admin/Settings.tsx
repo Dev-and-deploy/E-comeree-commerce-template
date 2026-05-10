@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Palette, Globe, Bell, DollarSign, Truck, Package } from "lucide-react";
+import { Shield, Palette, Globe, Bell, DollarSign, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGetSettingsQuery, useSaveSettingsMutation } from "@/store/api/settingsApi";
 import { CURRENCIES } from "@/lib/currency";

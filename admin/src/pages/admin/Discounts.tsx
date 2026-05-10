@@ -69,7 +69,6 @@ const TYPE_LABELS: Record<CouponType, string> = {
 
 function getCouponStatus(c: Coupon): "active" | "scheduled" | "expired" | "disabled" {
   if (!c.isActive) return "disabled";
-  const now = new Date();
   if (c.startDate && isFuture(parseISO(c.startDate))) return "scheduled";
   if (c.expiresAt && isPast(parseISO(c.expiresAt))) return "expired";
   if (c.maxUses && c.usedCount >= c.maxUses) return "expired";

@@ -118,7 +118,7 @@ function TextFilter({
 
   useEffect(() => {
     if (urlValue !== local) setLocal(urlValue);
-  }, [urlValue]);
+  }, [urlValue, local]);
 
   useEffect(() => {
     if (local === urlValue) return;
@@ -126,7 +126,7 @@ function TextFilter({
     const timer = setTimeout(() => {
       setSearchParams((prev) => {
         const p = new URLSearchParams(prev);
-        local ? p.set(paramKey, local) : p.delete(paramKey);
+        if (local) { p.set(paramKey, local); } else { p.delete(paramKey); }
         p.set("page", "1");
         return p;
       });
@@ -183,7 +183,7 @@ function SelectFilter({
       onValueChange={(val) =>
         setSearchParams((prev) => {
           const p = new URLSearchParams(prev);
-          val && val !== "__all__" ? p.set(paramKey, val) : p.delete(paramKey);
+          if (val && val !== "__all__") { p.set(paramKey, val); } else { p.delete(paramKey); }
           p.set("page", "1");
           return p;
         })
@@ -220,7 +220,7 @@ function DateRangeFilter({ paramKey }: { paramKey: string }) {
   const apply = (range?: { from?: Date; to?: Date }) => {
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
-      range?.from ? p.set(fromKey, format(range.from, "yyyy-MM-dd")) : p.delete(fromKey);
+      if (range?.from) { p.set(fromKey, format(range.from, "yyyy-MM-dd")); } else { p.delete(fromKey); }
       if (range?.to) {
         p.set(toKey, format(range.to, "yyyy-MM-dd"));
       } else {

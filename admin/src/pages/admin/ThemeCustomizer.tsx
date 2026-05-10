@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   useGetAllThemesQuery,
   useGetTemplatesQuery,
@@ -28,8 +28,8 @@ const ThemeCustomizer = () => {
   const [updateTheme] = useUpdateThemeMutation();
   const [activateTheme] = useActivateThemeMutation();
 
-  const themes = themesRes?.data || [];
-  const templates = templatesRes?.data || [];
+  const themes = useMemo(() => themesRes?.data ?? [], [themesRes]);
+  const templates = useMemo(() => templatesRes?.data ?? [], [templatesRes]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<ThemeSettings>>({});
@@ -43,7 +43,7 @@ const ThemeCustomizer = () => {
   useEffect(() => {
     const active = themes.find((t) => t.isActive);
     if (active && !selectedId) setSelectedId(active.id);
-  }, [themes]);
+  }, [themes, selectedId]);
 
   const handleSave = async () => {
     if (!selectedId) return;

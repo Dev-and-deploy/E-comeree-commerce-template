@@ -1,9 +1,16 @@
-FROM node:20-alpine
+FROM node:20-alpine AS base
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+RUN apk add --no-cache openssl
 
-COPY . .
-EXPOSE 5000
-CMD [ "node", "server.js" ]
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY prisma ./prisma
+RUN npx prisma generate
+
+COPY src ./src
+
+EXPOSE 4000
+
+CMD ["node", "src/server.js"]

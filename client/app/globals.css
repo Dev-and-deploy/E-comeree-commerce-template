@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1a1a2e;
+  --color-secondary: #ffffff;
+  --color-accent: #e94560;
+  --font-family: Inter, system-ui, sans-serif;
+  --border-radius: 0.5rem;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  color: var(--color-primary);
+  background: var(--color-secondary);
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply bg-primary text-secondary px-6 py-2 font-semibold transition-opacity hover:opacity-90;
+    border-radius: var(--border-radius);
+  }
+  .btn-accent {
+    @apply bg-accent text-white px-6 py-2 font-semibold transition-opacity hover:opacity-90;
+    border-radius: var(--border-radius);
+  }
+  .card {
+    @apply bg-white shadow-sm overflow-hidden;
+    border-radius: var(--border-radius);
+  }
+}

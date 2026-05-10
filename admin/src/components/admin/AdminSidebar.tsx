@@ -1,7 +1,8 @@
-import { NavLink } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store/store";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { logout } from "@/store/slices/authSlice";
+import { useLogoutMutation } from "@/store/api/authApi";
 import {
   LayoutDashboard,
   Megaphone,
@@ -15,26 +16,51 @@ import {
   ChevronLeft,
   Package,
   ShoppingCart,
+  Users,
+  Palette,
+  Layout,
+  FolderOpen,
+  UserCog,
 } from "lucide-react";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-const navItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-  { to: "/admin/products", icon: Package, label: "Products" },
-  { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
-  { to: "/admin/marketing", icon: Megaphone, label: "Marketing" },
-  { to: "/admin/discounts", icon: Tags, label: "Discounts & Coupons" },
-  { to: "/admin/blogs", icon: FileText, label: "Blog Management" },
-];
+// Nav items with optional permission guard
+const NAV_ITEMS = [
+  { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true, permission: PERMISSIONS.DASHBOARD_VIEW },
+  { to: "/admin/products", icon: Package, label: "Products", permission: PERMISSIONS.PRODUCTS_VIEW },
+  { to: "/admin/categories", icon: FolderOpen, label: "Categories", permission: PERMISSIONS.CATEGORIES_VIEW },
+  { to: "/admin/orders", icon: ShoppingCart, label: "Orders", permission: PERMISSIONS.ORDERS_VIEW },
+  { to: "/admin/users", icon: Users, label: "Users", permission: PERMISSIONS.USERS_VIEW },
+  { to: "/admin/marketing", icon: Megaphone, label: "Marketing", permission: PERMISSIONS.MARKETING_VIEW },
+  { to: "/admin/discounts", icon: Tags, label: "Discounts & Coupons", permission: PERMISSIONS.DISCOUNTS_VIEW },
+  { to: "/admin/blogs", icon: FileText, label: "Blog Management", permission: PERMISSIONS.BLOGS_VIEW },
+  { to: "/admin/theme", icon: Palette, label: "Theme Customizer", permission: PERMISSIONS.THEME_VIEW },
+  { to: "/admin/templates", icon: Layout, label: "Templates", permission: PERMISSIONS.TEMPLATES_VIEW },
+  { to: "/admin/admins", icon: UserCog, label: "Admin Management", permission: PERMISSIONS.ADMINS_VIEW },
+  { to: "/admin/settings", icon: Settings, label: "Settings", permission: PERMISSIONS.SETTINGS_VIEW },
+] as const;
 
 const AdminSidebar = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { mode } = useAppSelector((s) => s.theme);
   const { user } = useAppSelector((s) => s.auth);
   const [collapsed, setCollapsed] = useState(false);
-  const isSuperAdmin = user?.role === "super_admin";
+  const [logoutMutation] = useLogoutMutation();
+  const visibleNav = NAV_ITEMS.filter((item) => hasPermission(user?.role, item.permission));
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation().unwrap();
+    } catch {
+      // Even if the server call fails, clear local state and cookies best-effort
+    }
+    dispatch(logout());
+    navigate("/admin/login", { replace: true });
+  };
 
   return (
     <aside
@@ -64,11 +90,11 @@ const AdminSidebar = () => {
 
       {/* Nav */}
       <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-        {navItems.map((item) => (
+        {visibleNav.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.end}
+            end={"end" in item ? item.end : undefined}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
@@ -82,23 +108,6 @@ const AdminSidebar = () => {
             {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
-
-        {isSuperAdmin && (
-          <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
-              )
-            }
-          >
-            <Settings className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Settings</span>}
-          </NavLink>
-        )}
       </nav>
 
       {/* Footer */}
@@ -111,7 +120,7 @@ const AdminSidebar = () => {
             </p>
           </div>
         )}
-        <div className="flex gap-1">
+        <div className={cn("flex gap-1", collapsed && "flex-col items-center")}>
           <Button
             variant="ghost"
             size="icon"
@@ -128,7 +137,7 @@ const AdminSidebar = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => dispatch(logout())}
+            onClick={handleLogout}
             className="shrink-0 text-destructive"
             title="Logout"
           >

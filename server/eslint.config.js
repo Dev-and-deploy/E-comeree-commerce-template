@@ -1,13 +1,26 @@
+import js from "@eslint/js";
+
 export default [
+  js.configs.recommended,
   {
-    files: ['**/*.js'],
-    rules: {
-      semi: 'error',
-      'no-unused-vars': 'warn',
-      quotes: ['error', 'single'],
-      //  "no-console": "warn",
-      'no-duplicate-imports': 'error',
-      'no-multiple-empty-lines': ['error', { max: 1 }],
+    files: ["src/**/*.js", "prisma/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        Buffer: "readonly",
+      },
     },
+    rules: {
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-console": "off",
+    },
+  },
+  {
+    ignores: ["node_modules/", "dist/"],
   },
 ];

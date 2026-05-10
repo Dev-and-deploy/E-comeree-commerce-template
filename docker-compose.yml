@@ -1,36 +1,142 @@
+
 services:
-  backend:
-    build: ./server
-    image: server:latest
+  # ─── Infrastructure ──────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecom-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "6000:6000"
+      - "5432:5432"
+    networks:
+      - e-com-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecom-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - e-com-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend API ─────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: ecom-server:latest
+    container_name: ecom-server
+    ports:
+      - "4000:4000"
     env_file:
       - ./server/.env
-    container_name: server
-    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ecommerce}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - PORT=4000
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - e-com-network
+    command: >
+      sh -c "npx prisma db push --accept-data-loss && node src/server.js"
 
+  # ─── Background Workers ──────────────────────────────────────────
+  workers:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: ecom-server:latest
+    container_name: ecom-workers
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ecommerce}?schema=public
+      - REDIS_URL=redis://redis:6379
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - e-com-network
+    command: node src/workers/index.js
 
-  # admin:
-  #   build: ./admin
-  #   image: admin:latest
-  #   ports:
-  #     - "8080:8080"
-  #   env_file:
-  #     - ./admin/.env
-  #   container_name: admin
-  #   restart: always
-  #   depends_on:
-  #     - backend
-
+  # ─── Admin Panel ─────────────────────────────────────────────────
   admin:
-    container_name: admin   # custom container name
     build:
       context: ./admin
+      dockerfile: Dockerfile
       args:
-        VITE_API_URL: "http://51.21.128.163:6000/api"
+        VITE_API_URL: "http://localhost:4000/api"
+    image: ecom-admin:latest
+    container_name: ecom-admin
     ports:
       - "8080:8080"
+    restart: unless-stopped
     depends_on:
-      - backend                    # wait for backend service
-    restart: always               # auto restart container
+      - backend
+    networks:
+      - e-com-network
 
+  # ─── Client Storefront ───────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:4000/api"
+        NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+    image: ecom-client:latest
+    container_name: ecom-client
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://backend:4000/api
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - e-com-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+
+networks:
+  e-com-network:
+    driver: bridge

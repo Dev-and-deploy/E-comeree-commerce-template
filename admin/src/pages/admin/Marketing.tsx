@@ -35,6 +35,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2 } from "lucide-react";
 import { Campaign } from "@/store/api/mockData";
+import { useCurrencySymbol } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   active: "default",
@@ -45,6 +46,7 @@ const statusColors: Record<string, string> = {
 
 const Marketing = () => {
   const { data: campaigns, isLoading } = useGetCampaignsQuery();
+  const symbol = useCurrencySymbol();
   const [createCampaign] = useCreateCampaignMutation();
   const [deleteCampaign] = useDeleteCampaignMutation();
   const [open, setOpen] = useState(false);
@@ -163,7 +165,7 @@ const Marketing = () => {
                   </TableCell>
                   <TableCell>{c.reach.toLocaleString()}</TableCell>
                   <TableCell>{c.conversions.toLocaleString()}</TableCell>
-                  <TableCell>${c.budget.toLocaleString()}</TableCell>
+                  <TableCell>{symbol}{c.budget.toLocaleString()}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -214,7 +216,7 @@ const Marketing = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Budget ($)</Label>
+                <Label>Budget ({symbol})</Label>
                 <Input
                   type="number"
                   value={form.budget}

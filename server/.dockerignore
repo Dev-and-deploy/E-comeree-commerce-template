@@ -6,5 +6,5 @@ Dockerfile
 .gitignore
 .env
 dist
-build
 coverage
+prisma/migrations

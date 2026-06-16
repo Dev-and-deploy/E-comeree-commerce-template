@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isValid } from "date-fns";
-import { Plus, Pencil, Trash2, UserCog, ShieldCheck, UserX } from "lucide-react";
+import { Plus, Pencil, Trash2, UserCog, ShieldCheck, UserX, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { AdminForm } from "@/components/admin/AdminForm";
@@ -57,6 +60,7 @@ const Admins = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editAdmin, setEditAdmin] = useState<AdminUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [viewAdmin, setViewAdmin] = useState<AdminUser | null>(null);
 
   const queryParams = {
     page: parseInt(searchParams.get("page") ?? "1", 10),
@@ -210,6 +214,15 @@ const Admins = () => {
           <div className="flex items-center justify-end gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewAdmin(row)}>
+                  <Info className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>View details</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -311,6 +324,12 @@ const Admins = () => {
         }
       />
 
+      <Sheet open={!!viewAdmin} onOpenChange={(o) => !o && setViewAdmin(null)}>
+        <SheetContent className="w-[420px] sm:w-[480px] p-0">
+          {viewAdmin && <AdminDetailSheet admin={viewAdmin} currentUserId={currentUser?.id} />}
+        </SheetContent>
+      </Sheet>
+
       <AdminForm
         open={formOpen}
         onOpenChange={(open) => {
@@ -349,3 +368,92 @@ const Admins = () => {
 };
 
 export default Admins;
+
+// ─── Admin Detail Sheet ───────────────────────────────────────────────────────
+
+function AdminDetailSheet({ admin, currentUserId }: { admin: AdminUser; currentUserId?: string }) {
+  const fmtDate = (iso?: string) => {
+    if (!iso) return "—";
+    const d = parseISO(iso);
+    return isValid(d) ? format(d, "MMM d, yyyy, h:mm a") : "—";
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <SheetHeader className="px-6 pt-6 pb-5 border-b shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xl font-bold text-primary uppercase">
+            {admin.name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <SheetTitle className="text-lg leading-tight truncate">{admin.name}</SheetTitle>
+              {admin.id === currentUserId && (
+                <span className="text-[10px] text-muted-foreground font-normal shrink-0">(you)</span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground truncate mt-0.5">{admin.email}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <Badge className={`text-xs border ${ROLE_BADGE[admin.role] ?? "bg-muted text-muted-foreground"}`}>
+            {ROLE_LABEL[admin.role] ?? admin.role}
+          </Badge>
+          {admin.isActive ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-xs text-emerald-600 font-medium">Active</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+              <span className="text-xs text-muted-foreground">Inactive</span>
+            </span>
+          )}
+        </div>
+      </SheetHeader>
+
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-5 space-y-5">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contact</p>
+            <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium mt-0.5 break-all">{admin.email}</p>
+            </div>
+            {admin.phone && (
+              <div>
+                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="text-sm font-medium mt-0.5">{admin.phone}</p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Account</p>
+            <div>
+              <p className="text-xs text-muted-foreground">Role</p>
+              <p className="text-sm font-medium mt-0.5">{ROLE_LABEL[admin.role] ?? admin.role}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Admin ID</p>
+              <p className="text-xs font-mono text-muted-foreground mt-0.5 break-all">{admin.id}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Joined</p>
+                <p className="text-sm font-medium mt-0.5">{fmtDate(admin.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Last Updated</p>
+                <p className="text-sm font-medium mt-0.5">{fmtDate(admin.updatedAt)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}

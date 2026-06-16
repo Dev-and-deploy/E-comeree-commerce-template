@@ -38,6 +38,12 @@ enum CouponType {
   BUY_X_GET_Y
 }
 
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -289,4 +295,34 @@ model AdminSettings {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Blog {
+  id              String     @id @default(uuid())
+  title           String
+  slug            String     @unique
+  excerpt         String?
+  content         String?
+  status          BlogStatus @default(DRAFT)
+  author          String
+  category        String?
+  tags            String[]
+  featuredImage   String?
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  focusKeyword    String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String?
+  noIndex         Boolean    @default(false)
+  noFollow        Boolean    @default(false)
+  structuredData  String?
+  publishedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([createdAt])
 }

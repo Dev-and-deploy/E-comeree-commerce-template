@@ -1,517 +1,495 @@
 import { useState } from "react";
-import {
-  useGetBlogsQuery,
-  useCreateBlogMutation,
-  useDeleteBlogMutation,
-  useUpdateBlogMutation,
-} from "@/store/api/mockApi";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useSearchParams } from "react-router-dom";
+import { format, parseISO, isValid } from "date-fns";
+import { Plus, Pencil, Trash2, FileText, Info } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Edit, Search, Globe } from "lucide-react";
-import { BlogPost } from "@/store/api/mockData";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const statusColors: Record<string, string> = {
-  published: "default",
-  draft: "secondary",
-  scheduled: "outline",
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { BlogForm } from "@/components/blogs/BlogForm";
+
+import {
+  useGetAdminBlogsQuery,
+  useDeleteBlogMutation,
+  type Blog,
+} from "@/store/api/blogApi";
+import { useToast } from "@/hooks/use-toast";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const statusVariant: Record<Blog["status"], "default" | "secondary" | "outline"> = {
+  PUBLISHED: "default",
+  DRAFT: "secondary",
+  SCHEDULED: "outline",
 };
 
-const emptyBlog: Partial<BlogPost> = {
-  title: "",
-  slug: "",
-  excerpt: "",
-  content: "",
-  status: "draft",
-  author: "",
-  category: "",
-  tags: [],
-  featuredImage: "",
-  seo: {
-    metaTitle: "",
-    metaDescription: "",
-    canonicalUrl: "",
-    ogTitle: "",
-    ogDescription: "",
-    ogImage: "",
-    focusKeyword: "",
-    noIndex: false,
-    noFollow: false,
-    structuredData: "",
-  },
-};
+function seoScore(blog: Blog) {
+  const fields = [blog.metaTitle, blog.metaDescription, blog.focusKeyword, blog.ogTitle];
+  return Math.round((fields.filter(Boolean).length / fields.length) * 100);
+}
+
+function formatDate(iso?: string) {
+  if (!iso) return "—";
+  try {
+    const d = parseISO(iso);
+    return isValid(d) ? format(d, "MMM d, yyyy") : iso;
+  } catch {
+    return iso;
+  }
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 const Blogs = () => {
-  const { data: blogs, isLoading } = useGetBlogsQuery();
-  const [createBlog] = useCreateBlogMutation();
-  const [updateBlog] = useUpdateBlogMutation();
-  const [deleteBlog] = useDeleteBlogMutation();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<Partial<BlogPost>>(emptyBlog);
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
-  const handleSave = () => {
-    if (editing && form.id) {
-      updateBlog(form as BlogPost);
-    } else {
-      createBlog(form);
-    }
-    setOpen(false);
-    setForm(emptyBlog);
-    setEditing(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editBlog, setEditBlog] = useState<Blog | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Blog | null>(null);
+  const [viewBlog, setViewBlog] = useState<Blog | null>(null);
+
+  const queryParams = {
+    page: parseInt(searchParams.get("page") ?? "1", 10),
+    limit: parseInt(searchParams.get("limit") ?? "10", 10),
+    search: searchParams.get("search") ?? undefined,
+    status: searchParams.get("status") ?? undefined,
+    date_from: searchParams.get("date_from") ?? undefined,
+    date_to: searchParams.get("date_to") ?? undefined,
+    sortBy: searchParams.get("sortBy") ?? undefined,
+    sortOrder: (searchParams.get("sortOrder") ?? "desc") as string,
   };
 
-  const openEdit = (blog: BlogPost) => {
-    setForm(blog);
-    setEditing(true);
-    setOpen(true);
+  const { data, isFetching } = useGetAdminBlogsQuery(queryParams);
+  const blogs = data?.data ?? [];
+  const pagination = data?.pagination;
+
+  const [deleteBlog, { isLoading: deleting }] = useDeleteBlogMutation();
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteBlog(deleteTarget.id).unwrap();
+      toast({ title: "Post deleted", description: `"${deleteTarget.title}" removed.` });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete post.", variant: "destructive" });
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const openCreate = () => {
-    setForm(emptyBlog);
-    setEditing(false);
-    setOpen(true);
+    setEditBlog(null);
+    setFormOpen(true);
   };
 
-  // const goo = "gooo"
-  // const goo = "gooo"
-
-  const updateSeo = (field: string, value: any) => {
-    setForm({ ...form, seo: { ...form.seo!, [field]: value } });
+  const openEdit = (b: Blog) => {
+    setEditBlog(b);
+    setFormOpen(true);
   };
 
-  const generateSlug = (title: string) =>
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+  // ── Columns ──────────────────────────────────────────────────────────────────
 
-  if (isLoading)
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64" />
-      </div>
-    );
+  const columns: DataTableColumn<Blog>[] = [
+    {
+      key: "featuredImage",
+      header: "",
+      width: "56px",
+      cell: (row) => (
+        <div className="h-10 w-10 rounded-md overflow-hidden bg-muted shrink-0 flex items-center justify-center border">
+          {row.featuredImage ? (
+            <img
+              src={row.featuredImage}
+              alt={row.title}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "title",
+      header: "Post",
+      sortable: true,
+      filter: { type: "text", paramKey: "search", placeholder: "Search posts…" },
+      cell: (row) => (
+        <div className="min-w-0">
+          <p className="font-medium text-sm truncate max-w-[220px]" title={row.title}>
+            {row.title}
+          </p>
+          <p className="text-xs text-muted-foreground font-mono">/{row.slug}</p>
+        </div>
+      ),
+    },
+    {
+      key: "author",
+      header: "Author",
+      cell: (row) => <span className="text-sm">{row.author || "—"}</span>,
+    },
+    {
+      key: "category",
+      header: "Category",
+      cell: (row) =>
+        row.category ? (
+          <Badge variant="outline" className="text-xs font-normal">
+            {row.category}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      filter: {
+        type: "select",
+        paramKey: "status",
+        placeholder: "All statuses",
+        options: [
+          { label: "Published", value: "PUBLISHED" },
+          { label: "Draft", value: "DRAFT" },
+          { label: "Scheduled", value: "SCHEDULED" },
+        ],
+      },
+      cell: (row) => (
+        <Badge variant={statusVariant[row.status] ?? "secondary"} className="capitalize text-xs">
+          {row.status.toLowerCase()}
+        </Badge>
+      ),
+    },
+    {
+      key: "seo",
+      header: "SEO Score",
+      cell: (row) => {
+        const score = seoScore(row);
+        return (
+          <div className="flex items-center gap-2">
+            <div
+              className={`h-2 w-2 rounded-full shrink-0 ${
+                score >= 75 ? "bg-emerald-500" : score >= 50 ? "bg-amber-400" : "bg-red-500"
+              }`}
+            />
+            <span className="text-sm tabular-nums">{score}%</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "createdAt",
+      header: "Date",
+      sortable: true,
+      filter: { type: "date-range", paramKey: "date" },
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {formatDate(row.publishedAt || row.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      width: "110px",
+      headerClassName: "text-right pr-4",
+      className: "text-right",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setViewBlog(row)}
+              >
+                <Info className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>View details</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => openEdit(row)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setDeleteTarget(row)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete</TooltipContent>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Blog Management</h1>
-          <p className="text-muted-foreground">
-            Create and manage blog posts with SEO optimization features
+          <h1 className="text-2xl font-bold tracking-tight">Blog Management</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {pagination?.total !== undefined
+              ? `${pagination.total} post${pagination.total !== 1 ? "s" : ""} total`
+              : "Create and manage blog posts with SEO optimization"}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Post
-        </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>SEO Score</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="w-24"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {blogs?.map((b) => {
-                const seoFields = [
-                  b.seo.metaTitle,
-                  b.seo.metaDescription,
-                  b.seo.focusKeyword,
-                  b.seo.ogTitle,
-                ];
-                const seoScore = Math.round(
-                  (seoFields.filter(Boolean).length / seoFields.length) * 100,
-                );
-                return (
-                  <TableRow key={b.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{b.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          /{b.slug}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{b.author}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{b.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusColors[b.status] as any}>
-                        {b.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`h-2 w-2 rounded-full ${seoScore >= 75 ? "bg-green-500" : seoScore >= 50 ? "bg-yellow-500" : "bg-red-500"}`}
-                        />
-                        <span className="text-sm">{seoScore}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {b.publishedAt || b.createdAt}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(b)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteBlog(b.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Blog Editor Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit Post" : "Create New Post"}
-            </DialogTitle>
-            <DialogDescription>
-              Fill in the post details and SEO information
-            </DialogDescription>
-          </DialogHeader>
-
-          <Tabs defaultValue="content" className="mt-2">
-            <TabsList className="w-full">
-              <TabsTrigger value="content" className="flex-1">
-                Content
-              </TabsTrigger>
-              <TabsTrigger value="seo" className="flex-1">
-                <Search className="h-3 w-3 mr-1" />
-                SEO
-              </TabsTrigger>
-              <TabsTrigger value="og" className="flex-1">
-                <Globe className="h-3 w-3 mr-1" />
-                Open Graph
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="content" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input
-                  value={form.title}
-                  onChange={(e) => {
-                    setForm({
-                      ...form,
-                      title: e.target.value,
-                      slug: generateSlug(e.target.value),
-                    });
-                  }}
-                  placeholder="Post title"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Slug</Label>
-                  <Input
-                    value={form.slug}
-                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) =>
-                      setForm({ ...form, status: v as any })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Author</Label>
-                  <Input
-                    value={form.author}
-                    onChange={(e) =>
-                      setForm({ ...form, author: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Input
-                    value={form.category}
-                    onChange={(e) =>
-                      setForm({ ...form, category: e.target.value })
-                    }
-                    placeholder="e.g. Fashion, Lifestyle"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Excerpt</Label>
-                <Textarea
-                  value={form.excerpt}
-                  onChange={(e) =>
-                    setForm({ ...form, excerpt: e.target.value })
-                  }
-                  rows={2}
-                  placeholder="Short summary..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Content</Label>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm({ ...form, content: e.target.value })
-                  }
-                  rows={8}
-                  placeholder="Write your blog post content..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Tags (comma separated)</Label>
-                <Input
-                  value={form.tags?.join(", ")}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      tags: e.target.value
-                        .split(",")
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                  placeholder="e.g. fashion, summer, trends"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Featured Image URL</Label>
-                <Input
-                  value={form.featuredImage}
-                  onChange={(e) =>
-                    setForm({ ...form, featuredImage: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="seo" className="space-y-4 mt-4">
-              <div className="rounded-lg border border-border p-4 space-y-1 bg-muted/30">
-                <p className="text-sm font-medium">SEO Preview</p>
-                <p className="text-primary text-base font-medium truncate">
-                  {form.seo?.metaTitle || form.title || "Page Title"}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {form.seo?.canonicalUrl ||
-                    `https://store.com/blog/${form.slug || "post-slug"}`}
-                </p>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {form.seo?.metaDescription ||
-                    form.excerpt ||
-                    "Meta description will appear here..."}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  Meta Title{" "}
-                  <span className="text-muted-foreground text-xs">
-                    ({form.seo?.metaTitle?.length || 0}/60)
-                  </span>
-                </Label>
-                <Input
-                  value={form.seo?.metaTitle}
-                  onChange={(e) => updateSeo("metaTitle", e.target.value)}
-                  maxLength={60}
-                  placeholder="SEO optimized title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  Meta Description{" "}
-                  <span className="text-muted-foreground text-xs">
-                    ({form.seo?.metaDescription?.length || 0}/160)
-                  </span>
-                </Label>
-                <Textarea
-                  value={form.seo?.metaDescription}
-                  onChange={(e) => updateSeo("metaDescription", e.target.value)}
-                  maxLength={160}
-                  rows={3}
-                  placeholder="Compelling meta description..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Focus Keyword</Label>
-                <Input
-                  value={form.seo?.focusKeyword}
-                  onChange={(e) => updateSeo("focusKeyword", e.target.value)}
-                  placeholder="Primary keyword for this page"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Canonical URL</Label>
-                <Input
-                  value={form.seo?.canonicalUrl}
-                  onChange={(e) => updateSeo("canonicalUrl", e.target.value)}
-                  placeholder="https://store.com/blog/..."
-                />
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>Structured Data (JSON-LD)</Label>
-                <Textarea
-                  value={form.seo?.structuredData}
-                  onChange={(e) => updateSeo("structuredData", e.target.value)}
-                  rows={4}
-                  placeholder='{"@type": "BlogPosting", ...}'
-                  className="font-mono text-xs"
-                />
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={form.seo?.noIndex}
-                    onCheckedChange={(v) => updateSeo("noIndex", v)}
-                  />
-                  <Label className="text-sm">noIndex</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={form.seo?.noFollow}
-                    onCheckedChange={(v) => updateSeo("noFollow", v)}
-                  />
-                  <Label className="text-sm">noFollow</Label>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="og" className="space-y-4 mt-4">
-              <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
-                <p className="text-sm font-medium">Social Preview</p>
-                <div className="rounded border border-border overflow-hidden">
-                  {form.seo?.ogImage && (
-                    <div className="h-32 bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                      Image Preview
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <p className="font-medium text-sm">
-                      {form.seo?.ogTitle || form.title || "OG Title"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {form.seo?.ogDescription ||
-                        form.excerpt ||
-                        "OG description..."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>OG Title</Label>
-                <Input
-                  value={form.seo?.ogTitle}
-                  onChange={(e) => updateSeo("ogTitle", e.target.value)}
-                  placeholder="Title for social sharing"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>OG Description</Label>
-                <Textarea
-                  value={form.seo?.ogDescription}
-                  onChange={(e) => updateSeo("ogDescription", e.target.value)}
-                  rows={3}
-                  placeholder="Description for social sharing"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>OG Image URL</Label>
-                <Input
-                  value={form.seo?.ogImage}
-                  onChange={(e) => updateSeo("ogImage", e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              {editing ? "Update" : "Create"} Post
+      <DataTable<Blog>
+        columns={columns}
+        data={blogs}
+        pagination={pagination}
+        loading={isFetching}
+        rowKey={(row) => row.id}
+        toolbar={
+          <Button onClick={openCreate} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
+        }
+        emptyState={
+          <div className="flex flex-col items-center gap-3 py-6">
+            <FileText className="h-12 w-12 opacity-20" />
+            <p className="text-sm font-medium">No posts yet</p>
+            <p className="text-xs text-muted-foreground">
+              Create your first blog post to get started
+            </p>
+            <Button onClick={openCreate} size="sm" variant="outline" className="mt-1 gap-1.5">
+              <Plus className="h-4 w-4" />
+              New Post
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        }
+      />
+
+      {/* Create / Edit form */}
+      <BlogForm
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setEditBlog(null);
+        }}
+        blog={editBlog}
+      />
+
+      {/* Detail sheet */}
+      <Sheet open={!!viewBlog} onOpenChange={(open) => !open && setViewBlog(null)}>
+        <SheetContent className="w-[440px] sm:w-[520px] p-0">
+          {viewBlog && <BlogDetailSheet blog={viewBlog} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <strong>"{deleteTarget?.title}"</strong>. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
 export default Blogs;
+
+// ─── Blog Detail Sheet ────────────────────────────────────────────────────────
+
+function BlogDetailSheet({ blog }: { blog: Blog }) {
+  const score = seoScore(blog);
+
+  return (
+    <div className="flex flex-col h-full">
+      <SheetHeader className="px-6 pt-6 pb-5 border-b shrink-0">
+        {blog.featuredImage && (
+          <div className="h-32 rounded-lg overflow-hidden border bg-muted mb-3">
+            <img
+              src={blog.featuredImage}
+              alt={blog.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <SheetTitle className="text-lg leading-tight">{blog.title}</SheetTitle>
+        <p className="text-xs font-mono text-muted-foreground mt-0.5">/{blog.slug}</p>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <Badge variant={statusVariant[blog.status]} className="capitalize">
+            {blog.status.toLowerCase()}
+          </Badge>
+          {blog.category && (
+            <Badge variant="outline" className="text-xs">
+              {blog.category}
+            </Badge>
+          )}
+        </div>
+      </SheetHeader>
+
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-5 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Author</p>
+              <p className="text-sm font-medium mt-0.5">{blog.author || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">SEO Score</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    score >= 75
+                      ? "bg-emerald-500"
+                      : score >= 50
+                      ? "bg-amber-400"
+                      : "bg-red-500"
+                  }`}
+                />
+                <p className="text-sm font-medium">{score}%</p>
+              </div>
+            </div>
+          </div>
+
+          {blog.excerpt && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                  Excerpt
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {blog.excerpt}
+                </p>
+              </div>
+            </>
+          )}
+
+          {blog.tags?.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                  Tags
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {blog.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          <Separator />
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              SEO
+            </p>
+            {blog.metaTitle && (
+              <div>
+                <p className="text-xs text-muted-foreground">Meta Title</p>
+                <p className="text-sm font-medium mt-0.5">{blog.metaTitle}</p>
+              </div>
+            )}
+            {blog.metaDescription && (
+              <div>
+                <p className="text-xs text-muted-foreground">Meta Description</p>
+                <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                  {blog.metaDescription}
+                </p>
+              </div>
+            )}
+            {blog.focusKeyword && (
+              <div>
+                <p className="text-xs text-muted-foreground">Focus Keyword</p>
+                <p className="text-sm font-medium mt-0.5">{blog.focusKeyword}</p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <div>
+              <p>Created</p>
+              <p className="font-medium text-foreground mt-0.5">
+                {formatDate(blog.createdAt)}
+              </p>
+            </div>
+            <div>
+              <p>Published</p>
+              <p className="font-medium text-foreground mt-0.5">
+                {formatDate(blog.publishedAt) || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}

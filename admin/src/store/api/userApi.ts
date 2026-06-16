@@ -7,13 +7,29 @@ export interface User {
   role: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
   avatar?: string;
+  phone?: string;
+}
+
+export interface UserPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<{ data: User[]; pagination: object }, { page?: number; role?: string; search?: string }>({
+    getUsers: builder.query<
+      { data: User[]; pagination: UserPagination },
+      { page?: number; limit?: number; role?: string; search?: string; isActive?: string }
+    >({
       query: (params) => ({ url: "/users", params }),
+      providesTags: ["Users"],
+    }),
+    getUserById: builder.query<{ data: User }, string>({
+      query: (id) => ({ url: `/users/${id}` }),
       providesTags: ["Users"],
     }),
     updateUser: builder.mutation<{ data: User }, Partial<User> & { id: string }>({
@@ -27,4 +43,9 @@ export const userApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetUsersQuery, useUpdateUserMutation, useDeleteUserMutation } = userApi;
+export const {
+  useGetUsersQuery,
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} = userApi;

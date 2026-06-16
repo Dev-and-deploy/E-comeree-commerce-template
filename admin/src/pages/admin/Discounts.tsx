@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isValid, isPast, isFuture } from "date-fns";
-import { Plus, Pencil, Trash2, Tag, CalendarIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, CalendarIcon, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
@@ -168,6 +170,7 @@ const Discounts = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Coupon | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
+  const [viewCoupon, setViewCoupon] = useState<Coupon | null>(null);
   const [form, setForm] = useState<CreateCouponBody>(EMPTY_FORM);
 
   const openCreate = () => {
@@ -355,11 +358,19 @@ const Discounts = () => {
     {
       key: "actions",
       header: "Actions",
-      width: "90px",
+      width: "120px",
       headerClassName: "text-right pr-4",
       className: "text-right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewCoupon(row)}>
+                <Info className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>View details</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(row)}>
@@ -598,6 +609,13 @@ const Discounts = () => {
         </DialogContent>
       </Dialog>
 
+      {/* View Details Sheet */}
+      <Sheet open={!!viewCoupon} onOpenChange={(o) => !o && setViewCoupon(null)}>
+        <SheetContent className="w-[420px] sm:w-[480px] p-0">
+          {viewCoupon && <CouponDetailSheet coupon={viewCoupon} symbol={symbol} />}
+        </SheetContent>
+      </Sheet>
+
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
@@ -625,3 +643,113 @@ const Discounts = () => {
 };
 
 export default Discounts;
+
+// ─── Coupon Detail Sheet ──────────────────────────────────────────────────────
+
+function CouponDetailSheet({ coupon, symbol }: { coupon: Coupon; symbol: string }) {
+  const status = getCouponStatus(coupon);
+  const fmtDate = (iso?: string | null) => {
+    if (!iso) return "—";
+    const d = parseISO(iso);
+    return isValid(d) ? format(d, "MMM d, yyyy") : "—";
+  };
+
+  const typeLabel: Record<CouponType, string> = {
+    PERCENTAGE: "Percentage",
+    FIXED: "Fixed Amount",
+    FREE_SHIPPING: "Free Shipping",
+    BUY_X_GET_Y: "Buy X Get Y",
+  };
+
+  const valueDisplay =
+    coupon.type === "PERCENTAGE" || coupon.type === "BUY_X_GET_Y"
+      ? `${coupon.value}%`
+      : coupon.type === "FIXED"
+      ? `${symbol}${coupon.value}`
+      : "—";
+
+  const usagePct =
+    coupon.maxUses && coupon.maxUses > 0
+      ? Math.min((coupon.usedCount / coupon.maxUses) * 100, 100)
+      : 0;
+
+  return (
+    <div className="flex flex-col h-full">
+      <SheetHeader className="px-6 pt-6 pb-5 border-b shrink-0">
+        <code className="text-xl font-mono font-bold tracking-widest">{coupon.code}</code>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <Badge className={`text-xs ${STATUS_BADGE[status]}`}>{status}</Badge>
+          <Badge variant="outline" className="text-xs">{typeLabel[coupon.type]}</Badge>
+          {coupon.showInBanner && (
+            <Badge className="text-xs bg-black text-white hover:bg-black">Banner</Badge>
+          )}
+        </div>
+      </SheetHeader>
+
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-5 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Discount Value</p>
+              <p className="text-2xl font-bold tabular-nums mt-0.5">{valueDisplay}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Min Order</p>
+              <p className="text-sm font-medium mt-0.5">
+                {coupon.minOrderAmount ? `${symbol}${coupon.minOrderAmount}` : "No minimum"}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">Usage</p>
+            <div className="flex justify-between text-sm tabular-nums mb-1">
+              <span className="font-medium">{coupon.usedCount.toLocaleString()} used</span>
+              <span className="text-muted-foreground">
+                {coupon.maxUses ? `of ${coupon.maxUses.toLocaleString()}` : "unlimited"}
+              </span>
+            </div>
+            {coupon.maxUses && coupon.maxUses > 0 && (
+              <Progress value={usagePct} className="h-1.5" />
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Start Date</p>
+              <p className="text-sm font-medium mt-0.5">{fmtDate(coupon.startDate)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Expiry Date</p>
+              <p className={`text-sm font-medium mt-0.5 ${coupon.expiresAt && isPast(parseISO(coupon.expiresAt)) ? "text-destructive" : ""}`}>
+                {fmtDate(coupon.expiresAt)}
+              </p>
+            </div>
+          </div>
+
+          {coupon.showInBanner && coupon.bannerTitle && (
+            <>
+              <div className="h-px bg-border" />
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Banner Message</p>
+                <p className="text-sm">{coupon.bannerTitle}</p>
+              </div>
+            </>
+          )}
+
+          <div className="h-px bg-border" />
+          <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <div>
+              <p>Created</p>
+              <p className="font-medium text-foreground mt-0.5">{fmtDate(coupon.createdAt)}</p>
+            </div>
+            <div>
+              <p>Updated</p>
+              <p className="font-medium text-foreground mt-0.5">{fmtDate(coupon.updatedAt)}</p>
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
